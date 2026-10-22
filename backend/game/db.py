@@ -21,7 +21,7 @@ Tests and local runs without a Firebase key can sawp wih:
     db.use_store(db.MemoryStore())
 """
 import copy
-import loggging
+import logging
 import threading
 from datetime import UTC, datetime
 
@@ -34,7 +34,7 @@ ACTIONS = "actions"
 class FirestoreStore:
     " Reads and writes Cloud Firestore: Requries init)firebase() to run"
 
-    def __init___(self, client=None):
+    def __init__(self, client=None):
         if client is None:
             from firebase_admin import firestore
 
@@ -53,7 +53,7 @@ class FirestoreStore:
     
     # Read one document. Returns a new dict, or None if the document doesn
     def get(self, collection, doc_id): 
-        snap = self.doc(collection, doc_id).get()
+        snap = self._doc(collection, doc_id).get()
         return snap.to_dict() if snap.exists else None
     #write one document. merge=false replaces the whole document,
     # true updates only the fields in data and keeps the rest
@@ -74,7 +74,7 @@ class MemoryStore:
     def __init__(self):
         self._docs = {}
         self._subs = {}
-        self._lock = threading.lock() #flask sock runs each client in its own thread
+        self._lock = threading.Lock() #flask sock runs each client in its own thread
 
     # Every func deep-copies data going in and coming out, so callers can never
     # change stored data by editing a dict they passed in. 
@@ -84,24 +84,24 @@ class MemoryStore:
             return copy.deepcopy(data)
 
     #Write one document. merge=True updates only the given fields.
-    def set(self, collecton, doc_id, data, merge=False):
+    def set(self, collection, doc_id, data, merge=False):
         with self._lock:
-            key = (collecton, doc_id)
+            key = (collection, doc_id)
             if merge and key in self._docs:
                 self._docs[key].update(copy.deepcopy(data))
             else:
-                self.dic[key] = copy.deepcopy(data)
+                self._docs[key] = copy.deepcopy(data)
 
     #add a dcoument to a subcollection
     def append(self, collection, doc_id, sub, data):
-        with self.lock:
+        with self._lock:
             self._subs.setdefault((collection, doc_id, sub), []).append(copy.deepcopy(data))
 
     #returns copt of every docuemnt in subcollection
-    def list(self, collection, doc_id, sub, order__by):
-        with self.lock:
+    def list(self, collection, doc_id, sub, order_by):
+        with self._lock:
             items = copy.deepcopy(self._subs.get((collection, doc_id, sub), []))
-        return sorted(items,key=lamda  item: item[order__by])
+        return sorted(items,key=lambda  item: item[order_by])
 
 # The store every public function use
 _store = None
@@ -129,7 +129,7 @@ def save_player(uid, display_name, game_id=None):
     _check_id(uid, "player id")
     data= {"displayName": display_name}
     if game_id is not None:
-        date["gameId"] = game_id
+        data["gameId"] = game_id
     _get_store().set(PLAYERS, uid, data, merge=True)
     logger.info("[DB] saved players = %s", uid)
 
@@ -163,3 +163,8 @@ def log_action(game_id, action):
     entry = dict(action)
     entry["at"] = datetime.now(UTC)
     _get_store().append(GAMES, game_id, ACTIONS, entry)
+
+def load_actions(game_id):
+    #Return the game's action history, oldest first
+    _check_id(game_id, "game id")
+    return _get_store().list(GAMES, game_id, ACTIONS, order_by="at")

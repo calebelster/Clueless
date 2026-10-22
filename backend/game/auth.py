@@ -1,7 +1,7 @@
 """
 Authentication subsytem: verified who sent message
 
-CLients sign in to firebase with anonymous sign in and put their firebase ID token in the top-level "token" fiel of every message
+CLients sign in to firebase with anonymous sign in and put their firebase ID session token in the top-level "token" fiel of every message
 
 The server never trusts a player ID or display name the client sends. It takes the player ID from the verifief token and the display name from the DB
 
@@ -14,7 +14,7 @@ import logging
 
 from firebase_admin import auth as fb_auth
 
-from game import bd
+from game import db
 
 logger = logging.getLogger(__name__)
 
@@ -48,25 +48,25 @@ def _pop_token(message):
     token = message.pop("sessionToken", None)
     payload = message.get("payload")
     if isinstance(payload, dict) and "sessionToken" in payload:
-        paylaod = dict("payload")
+        payload = dict("payload")
         payload_token = payload.pop("sessionToken")
-        message["paylaod"] = payload
+        message["payload"] = payload
         token = token or payload_token
     return token
 
 def verify_token(token):
     "return firebase uid for a valid id token or non"
     "fails clossed: missing otken, bad token, firebase not avail"
-    if not isinstance(toekn, str) or not token:
+    if not isinstance(token, str) or not token:
         return None
     try:
-        retun fb_auth.verify_id_token(token)["uid"]
+        return fb_auth.verify_id_token(token)["uid"]
     except fb_auth.CertificateFetchError:
-        loffer.error("[AUTH] could not fetch Firebase signing keys: token rejected")
-    except (ValueError, fb_auth.InvalidIdToekmError) as err:
+        logger.error("[AUTH] could not fetch Firebase signing keys: token rejected")
+    except (ValueError, fb_auth.InvalidIdTokenError) as err:
         # invalidTokenError covers expried and revoked 
         #valeuError vcoers malformed tokens
-        logger.warning("[AUTH] reject:", err )
+        logger.warning("[AUTH] reject:=%s", err )
     return None
 
 def _clean_name(name):
@@ -74,7 +74,7 @@ def _clean_name(name):
     if not isinstance(name, str):
         return None
     name = name.strip()
-    if not 1 <= len(name <= MAX_NAME_LENGTH or not name.isprintable()):
+    if not 1 <= len(name) <= MAX_NAME_LENGTH or not name.isprintable():
         return None
     return name
 
@@ -91,27 +91,27 @@ def login(message):
    
     if name is None:
         return _auth_fail(
-            "INVALID DISPLAY NAME", "display name msut be 1 to 20"
+            "INVALID_DISPLAY_NAME", "display name msut be 1 to 20"
         )
 
     try:
         db.save_player(uid,name)
     except Exception:
-        logger.exception("[AUTH] ccoudl not save", uid)
-        return _auth_fail("Server Error", "could not sign in/. ")
+        logger.exception("[AUTH] ccoudl not save=%s", uid)
+        return _auth_fail("SEVER_ERROR", "could not sign in/. ")
 
-    _name[uid] = name
+    _names[uid] = name
     logger.info("[AUTH] Auth_Red ok playerID=%s   displaayName = %s", uid, name)
     return {
         "type": "AUTH_RESP",
         "payload": {"success": True,
-                    "playerid": uid,
+                    "playerId": uid,
                     "displayName": name}
     }
 
 def _lookup_name(uid):
     #looks up the name
-    name = _name.get(uid)
+    name = _names.get(uid)
     if name is None:
         player = db.load_player(uid)
         if player is not None:
@@ -139,6 +139,6 @@ def authenticate(message):
         return None, _rejected("AUTH_NOT_SIGNED_IN", "send AUTH_REQ BEFORE requests")
 
     message["playerId"] = uid #overiwte what the client claimed
-    message["displayeName"] = name #ovewrties
-    logger.infor("[AUTH] verifed %s playerID = %s", message.get("types"), uid)
+    message["displayName"] = name #ovewrties
+    logger.info("[AUTH] verifed= %s playerID = %s", message.get("type"), uid)
     return message, None
