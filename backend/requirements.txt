@@ -1,0 +1,11 @@
+# Runtime
+flask>=3.1
+flask-sock>=0.7
+flask-cors>=6.0
+firebase-admin>=7.0
+python-dotenv>=1.1
+
+# Dev
+pytest>=8.4
+requests>=2.32
+ruff>=0.14
