@@ -48,7 +48,7 @@ def _pop_token(message):
     token = message.pop("sessionToken", None)
     payload = message.get("payload")
     if isinstance(payload, dict) and "sessionToken" in payload:
-        payload = dict("payload")
+        payload = dict(payload)
         payload_token = payload.pop("sessionToken")
         message["payload"] = payload
         token = token or payload_token
@@ -98,7 +98,7 @@ def login(message):
         db.save_player(uid,name)
     except Exception:
         logger.exception("[AUTH] ccoudl not save=%s", uid)
-        return _auth_fail("SEVER_ERROR", "could not sign in/. ")
+        return _auth_fail("SERVER_ERROR", "could not sign in/. ")
 
     _names[uid] = name
     logger.info("[AUTH] Auth_Red ok playerID=%s   displaayName = %s", uid, name)
