@@ -92,7 +92,7 @@ def _saved(game_id, game_state, event_type, description):
             "gameId": game_id,
             "status": game_state.get("status"),
             "players": game_state.get("players", {}),
-            "currentPlayerTurn": stub_state.get("currentPlayerTurn"),
+            "currentTurnPlayer": stub_state.get("currentTurnPlayer"),
             "boardLocations": stub_state.get("boardLocations") or {},
             "activeStatus": stub_state.get("activeStatus") or {},
         },
@@ -155,7 +155,7 @@ def create_game(host_id, display_name):
             }
         },
         "stubState": {
-            "currentPlayerTurn": None,
+            "currentTurnPlayer": None,
             "boardLocations": {},
             "activeStatus": {},
         },
