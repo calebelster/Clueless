@@ -1,0 +1,102 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f4f4;
+  color: #222;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  padding: 8px 14px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+input,
+select {
+  padding: 8px;
+}
+
+.app {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  margin-bottom: 24px;
+}
+
+header h1 {
+  margin-bottom: 4px;
+}
+
+header p {
+  margin-top: 0;
+}
+
+.panel,
+.status-panel {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.status-panel {
+  display: grid;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.log {
+  background: #111;
+  color: #eee;
+  min-height: 250px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.log-entry {
+  border-bottom: 1px solid #444;
+  padding: 8px 0;
+}
+
+.log-entry pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 6px 0 0;
+}
+
+.log-entry.OUT {
+  opacity: 0.85;
+}
+
+.log-entry.ERROR {
+  font-weight: bold;
+}
