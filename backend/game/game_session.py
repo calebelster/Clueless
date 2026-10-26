@@ -19,7 +19,7 @@ The actions of the player is forwarded to the rule engine for validation:
 import logging
 import uuid
 from datetime import UTC, datetime
-from game import db
+from game import db, rules_engine
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +35,8 @@ RULES_MESSAGES = (
 
 
 def _rules_engine_stub(action, game, player, payload):
-    #  TODO: Will be replaced with rules_engine.validate(action, game, player, payload) -> (accepted, reason) when rule engine is done
-    return True, ""
+    return rules_engine.execute(action, game, player, payload)
+
 
 def _rejected(error_code, reason):
     "ACTION_REJECTED (), sent to the sender only (NFR-OR-2, NFR, UER-3)"
