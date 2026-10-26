@@ -60,7 +60,6 @@ def _load_game(game_id):
         return None
 
 
-
 def find_game_player(player_id):
     """
     Find which game a player is in through the player's record
@@ -75,8 +74,6 @@ def find_game_player(player_id):
     
     game_id = record["gameId"]
     return game_id, _load_game(game_id)
-
-
 
 
 def _saved(game_id, game_state, event_type, description):
@@ -239,7 +236,7 @@ def handle_action(player_id, message):
     """
     Look up the game and player, then forward to the Rules Engine
     """
-    type = message.get("type")
+    msg_type = message.get("type")
     game_id, game_state = find_game_player(player_id)
     
     if game_id is None:
@@ -256,14 +253,11 @@ def handle_action(player_id, message):
         payload = {}
         
     player = game_state["players"][player_id]
-    logger.info(f"[GAME] Looked up {game_id} | {player_id} -> forward {type} to Rules Engine")
-    accepted, reason = _rules_engine_stub(type, game_state, player, payload)
+    logger.info(f"[GAME] Looked up {game_id} | {player_id} -> forward {msg_type} to Rules Engine")
+    accepted, reason = _rules_engine_stub(msg_type, game_state, player, payload)
     
     if not accepted:
         error_msg = reason or "Action rejected by rule engine"
         return _rejected("ILLEGAL_ACTION", error_msg), None
 
-    return _saved(game_id, game_state, type, f"{player_id} sent {type}")
-
-
-
+    return _saved(game_id, game_state, msg_type, f"{player_id} sent {msg_type}")

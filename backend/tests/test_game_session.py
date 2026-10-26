@@ -15,9 +15,9 @@ def setup():
     db.use_store(db.MemoryStore())
 
 
-def _msg(type, player_id="p1", display_name="HengKuan", **payload):
+def _msg(msg_type, player_id="p1", display_name="HengKuan", **payload):
     return {
-        "type": type,
+        "type": msg_type,
         "playerId": player_id,
         "displayName": display_name,
         "payload": payload,
