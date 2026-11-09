@@ -254,7 +254,7 @@ def handle_action(player_id, message):
         
     player = game_state["players"][player_id]
     logger.info(f"[GAME] Looked up {game_id} | {player_id} -> forward {msg_type} to Rules Engine")
-    accepted, reason = _rules_engine_stub(msg_type, game_state, player, payload)
+    accepted, reason = _rules_engine_stub(msg_type, (game_id, game_state), player, payload)
     
     if not accepted:
         error_msg = reason or "Action rejected by rule engine"

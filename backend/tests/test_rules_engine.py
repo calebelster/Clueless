@@ -8,7 +8,7 @@ from game import rules_engine
 
 
 def test_reject_bad_action():
-    game, player, payload = {}, {}, {}
+    game, player, payload = ("gameid", {}), {"displayName": "test"}, {}
     bad_action = "BADCMD_REQ"
 
     success, reason = rules_engine.execute(bad_action, game, player, payload)
@@ -28,7 +28,7 @@ def test_reject_bad_action():
     ],
 )
 def test_validated_good_action(action, expected):
-    game, player, payload = {}, {}, {}
+    game, player, payload = ("gameId", {}), {"displayName": "test"}, {}
     success, reason = rules_engine.execute(action, game, player, payload)
     assert success == expected
     assert reason == f"{action} valid"

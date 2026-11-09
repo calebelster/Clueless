@@ -38,6 +38,8 @@ Accusations:
 
 import logging
 
+from game import db
+
 logger = logging.getLogger(__name__)
 
 
@@ -168,7 +170,9 @@ def _perform_move(game, player, payload) -> tuple[bool, str]:
 
     if accepted:
         # Do the move
-        logger.info(f"[RULES] Accepted and executing MOVE_REQ by {player}")
+        logger.info(f"[RULES] Accepted and executing MOVE_REQ by {player['displayName']}")
+        game_id, game_state = game
+        db.save_game(game_id, game_state)
     else:
         logger.info(f"[RULES] Rejecting MOVE_REQ by {player}. {reason=}")
 
@@ -180,7 +184,10 @@ def _perform_suggest(game, player, payload) -> tuple[bool, str]:
 
     if accepted:
         # Do the suggest action
-        logger.info(f"[RULES] Accepted and executing SUGGEST_REQ by {player}")
+        logger.info(f"[RULES] Accepted and executing SUGGEST_REQ by {player['displayName']}")
+        
+        game_id, game_state = game
+        db.save_game(game_id, game_state)
     else:
         logger.info(f"[RULES] Rejecting SUGGEST_REQ by {player}. {reason=}")
 
@@ -199,7 +206,9 @@ def _perform_accuse(game, player, payload) -> tuple[bool, str]:
 
     if accepted:
         # Do the accuse action
-        logger.info(f"[RULES] Accepted and executing ACCUSE_REQ by {player}")
+        logger.info(f"[RULES] Accepted and executing ACCUSE_REQ by {player['displayName']}")
+        game_id, game_state = game
+        db.save_game(game_id, game_state)
     else:
         logger.info(f"[RULES] Rejecting ACCUSE_REQ by {player}. {reason=}")
 
@@ -211,7 +220,12 @@ def _perform_disprove(game, player, payload) -> tuple[bool, str]:
 
     if accepted:
         # Do the disprove action
-        logger.info(f"[RULES] Accepted and executing DISPROVE_REQ by {player}")
+        logger.info(f"[RULES] Accepted and executing DISPROVE_REQ by {player['displayName']}")
+
+        logger.info(f"[RULES] Updating game state in database")
+
+        game_id, game_state = game
+        db.save_game(game_id, game_state)
     else:
         logger.info(f"[RULES] Rejecting DISPROVE_REQ by {player}. {reason=}")
 
@@ -223,9 +237,12 @@ def _perform_end_turn(game, player, payload) -> tuple[bool, str]:
 
     if accepted:
         # Do the end turn action
-        logger.info(f"[RULES] Accepted and executing END_TURN_REQ by {player}")
+        logger.info(f"[RULES] Accepted and executing END_TURN_REQ by {player['displayName']}")
+
+        game_id, game_state = game
+        db.save_game(game_id, game_state)
     else:
-        logger.info(f"[RULES] Rejecting END_TURN_REQ by {player}. {reason=}")
+        logger.info(f"[RULES] Rejecting END_TURN_REQ by {player['display']}. {reason=}")
 
     return accepted, reason
 
