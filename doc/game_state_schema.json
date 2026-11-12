@@ -1,18 +1,17 @@
 {
-    "game_id": "string",
-    "status": "string",
+    "game_id": "",
+    "status": "",
     "players": [
         {
             "player_id": "",
             "display_name": "",
             "character": {
                 "name": "",
-                "starting_location": "",
                 "location": {
                     "location_id": "",
                     "name": ""
                 },
-                "moved_by_suggestion": ""
+                "moved_by_suggestion": false
             }, 
             "hand": [
                 {
@@ -24,13 +23,13 @@
             "is_connected": false
         }
     ],
-    "host": "string",
+    "host": "",
     "case_file": {
         "weapon": {"card_type": "weapon", "name": ""},
         "character": {"card_type": "character"}, "name": "",
         "room": {"card_type": "room", "name": ""}
     },
-    "turn_order": ["string"],
+    "turn_order": [""],
     "current_turn_index": 0,
     "disprove_turn_index": 0,
     "current_suggestion": {
