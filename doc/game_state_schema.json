@@ -1,0 +1,43 @@
+{
+    "game_id": "",
+    "status": "",
+    "players": [
+        {
+            "player_id": "",
+            "display_name": "",
+            "character": {
+                "name": "",
+                "location": {
+                    "location_id": "",
+                    "name": ""
+                },
+                "moved_by_suggestion": false
+            }, 
+            "hand": [
+                {
+                    "card_type": "",
+                    "name": ""
+                }
+            ],
+            "is_eliminated": false,
+            "is_connected": false
+        }
+    ],
+    "host": "",
+    "case_file": {
+        "weapon": {"card_type": "weapon", "name": ""},
+        "character": {"card_type": "character"}, "name": "",
+        "room": {"card_type": "room", "name": ""}
+    },
+    "turn_order": [""],
+    "current_turn_index": 0,
+    "disprove_turn_index": 0,
+    "current_suggestion": {
+        "suggester": "",
+        "character": "",
+        "weapon": "",
+        "room": ""
+    },
+    "suggestion_round": false,
+    "created_at": "2027-11-11:HHMMSS"
+}
