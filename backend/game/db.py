@@ -23,7 +23,10 @@ Tests and local runs without a Firebase key can sawp wih:
 import copy
 import logging
 import threading
+from contextlib import contextmanager
 from datetime import UTC, datetime
+
+from game.serialization import from_storable, to_storable
 
 logger = logging.getLogger(__name__)
 
@@ -142,19 +145,51 @@ def load_player(uid):
 #replace the stored fame state with state
 def save_game( game_id, state):
     _check_id(game_id, "game id")
-    if not isinstance(state, dict):
+    data = to_storable(state)
+    if not isinstance(data, dict):
         raise TypeError("game state must be dict")
-    _get_store().set(GAMES, game_id, state)
+    _get_store().set(GAMES, game_id, data)
     logger.info("[DB] saved game = %s", game_id)    
 
 #return the fresh copy of game state. 
 # editiing retruend dict does not change what is store. Call save_game() to store changes 
-def load_game(game_id):
+def load_game(game_id, cls=None):
     _check_id(game_id, "game_id")
     state = _get_store().get(GAMES, game_id)
     logger.info("[DB] loadeed game=%s  and found=%s", game_id, state is not None)
-    return state
+    return from_storable(state, cls)
 
+# -- Per game locking --
+# runs each client on its own thread. two players acting at once could both
+# load, edit, and save would erase. Hold game's lock across load -> edit -> save
+
+_game_locks = {}
+_game_locks_guard = threading.Lock()
+
+def _lock_for(game_id):
+    with _game_locks_guard:
+        return _game_locks.setdefault(game_id, threading.RLock())
+
+@contextmanager
+def game_lock(game_id):
+    "with db.game_lock(game_id): load, change, save"
+    _check_id(game_id, "game id")
+    lock = _lock_for(game_id)
+    with lock:
+        yield
+
+def update_game(game_id, change):
+    "Load game, call change(state), save, and return saved state"
+    "all under game lcok. chnage dits state in place or return new state"
+    with game_lock(game_id):
+        state = load_game(game_id)
+        if state is None:
+            return None
+        result = change(state)
+        if result is not None:
+            state = result
+        save_game(game_id, state)
+        return state
 
 # -- Action history
 

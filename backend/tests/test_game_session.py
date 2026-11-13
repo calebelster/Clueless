@@ -7,6 +7,7 @@ Run from backend/:
 """
 
 import pytest
+
 from game import db, game_session
 
 

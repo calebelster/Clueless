@@ -60,7 +60,7 @@ def verify_token(token):
     if not isinstance(token, str) or not token:
         return None
     try:
-        return fb_auth.verify_id_token(token)["uid"]
+        return fb_auth.verify_id_token(token, clock_skew_seconds=10)["uid"]
     except fb_auth.CertificateFetchError:
         logger.error("[AUTH] could not fetch Firebase signing keys: token rejected")
     except (ValueError, fb_auth.InvalidIdTokenError) as err:
