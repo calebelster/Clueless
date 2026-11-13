@@ -38,7 +38,43 @@ Accusations:
 
 import logging
 
+from game.game import Game, Player, Location, Card
+
+
 logger = logging.getLogger(__name__)
+
+
+class RulesEngine:
+
+    def validate_move(self, game: Game, player: Player, location: Location) -> tuple[bool, str]:
+        return True, "ok"
+
+    def perform_move(self, game: Game, player: Player, location: Location):
+        pass
+
+    def validate_suggest(self, game: Game, player: Player, character: Card, weapon: Card) -> tuple[bool, str]:
+        return True, "ok"
+
+    def perform_suggest(self, game: Game, player: Player, character: Card, weapon: Card):
+        pass
+
+    def validate_disprove(self, game: Game, player: Player, card: Card | None) -> tuple[bool, str]:
+        return True, "ok"
+
+    def perform_disprove(self, game: Game, player: Player, card: Card | None):
+        pass
+
+    def validate_accuse(self, game: Game, player: Player, weapon: Card, room: Card, character: Card) -> tuple[bool, str]:
+        return True, "ok"
+
+    def perform_accuse(self, game: Game, player: Player, weapon: Card, room: Card, character: Card):
+        pass
+
+    def validate_end_turn(self, game: Game, player: Player) -> tuple[bool, str]:
+        return True, "ok"
+
+    def perform_end_turn(self, game: Game, player: Player):
+        pass
 
 
 def _validate_move(game, player, payload):
