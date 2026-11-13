@@ -1,0 +1,78 @@
+{
+    "game_id": "g-1a2b3c4d",
+    "status": "in_progress",
+    "host_id": "uid-alice",
+    "created_at": "2026-11-13T19:00:00+00:00",
+
+    "players": {
+        "uid-alice": {
+            "display_name": "Alice",
+            "character": "Miss Scarlet",
+            "hand": [
+                {"card_type": "weapon", "name": "Rope"},
+                {"card_type": "room", "name": "Kitchen"},
+                {"card_type": "character", "name": "Mrs. White"}
+            ],
+            "is_eliminated": false,
+            "is_connected": true,
+            "joined_at": "2026-11-13T19:00:00+00:00"
+        },
+        "uid-bob": {
+            "display_name": "Bob",
+            "character": "Colonel Mustard",
+            "hand": [
+                {"card_type": "weapon", "name": "Lead Pipe"},
+                {"card_type": "room", "name": "Study"},
+                {"card_type": "character", "name": "Professor Plum"}
+            ],
+            "is_eliminated": false,
+            "is_connected": true,
+            "joined_at": "2026-11-13T19:01:00+00:00"
+        },
+        "uid-cara": {
+            "display_name": "Cara",
+            "character": "Mrs. Peacock",
+            "hand": [
+                {"card_type": "weapon", "name": "Wrench"},
+                {"card_type": "room", "name": "Hall"},
+                {"card_type": "room", "name": "Library"}
+            ],
+            "is_eliminated": false,
+            "is_connected": true,
+            "joined_at": "2026-11-13T19:02:00+00:00"
+        }
+    },
+
+    "characters": {
+        "Miss Scarlet":     {"location_id": "lounge",                 "moved_by_suggestion": false},
+        "Colonel Mustard":  {"location_id": "hallway_lounge_dining",  "moved_by_suggestion": false},
+        "Mrs. White":       {"location_id": "hallway_ballroom_kitchen","moved_by_suggestion": false},
+        "Mr. Green":        {"location_id": "hallway_conservatory_ballroom", "moved_by_suggestion": false},
+        "Mrs. Peacock":     {"location_id": "hallway_library_conservatory",  "moved_by_suggestion": false},
+        "Professor Plum":   {"location_id": "lounge",                 "moved_by_suggestion": true}
+    },
+
+    "case_file": {
+        "character": {"card_type": "character", "name": "Mr. Green"},
+        "weapon":    {"card_type": "weapon",    "name": "Candlestick"},
+        "room":      {"card_type": "room",      "name": "Ballroom"}
+    },
+
+    "turn_order": ["uid-alice", "uid-bob", "uid-cara"],
+    "current_turn_index": 0,
+    "turn_state": {
+        "has_moved": true,
+        "can_suggest": false
+    },
+
+    "suggestion_round": true,
+    "disprove_turn_index": 1,
+    "current_suggestion": {
+        "suggester_id": "uid-alice",
+        "character": "Professor Plum",
+        "weapon": "Rope",
+        "room": "Lounge"
+    },
+
+    "winner_id": null
+}

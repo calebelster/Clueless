@@ -19,6 +19,7 @@ The actions of the player is forwarded to the rule engine for validation:
 import logging
 import uuid
 from datetime import UTC, datetime
+
 from game import db, rules_engine
 
 logger = logging.getLogger(__name__)
