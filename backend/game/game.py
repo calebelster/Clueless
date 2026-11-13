@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Any
 
 
 class CardType(Enum):
@@ -7,7 +8,7 @@ class CardType(Enum):
     CHARACTER = "character"
 
 
-class Weapon(Enum):
+class WeaponType(Enum):
     ROPE = "rope"
     LEAD_PIPE = "lead pipe"
     KNIFE = "knife"
@@ -16,7 +17,7 @@ class Weapon(Enum):
     REVOLVER = "revolver"
 
 
-class Room(Enum):
+class RoomType(Enum):
     STUDY = "study"
     HALL = "hall"
     LOUNGE = "lounge"
@@ -28,7 +29,7 @@ class Room(Enum):
     KITCHEN = "kitchen"
 
 
-class Character(Enum):
+class CharType(Enum):
     MISS_SCARLET = "miss scarlett"
     COLONEL_MUSTARD = "colonel mustard"
     PROFESSOR_PLUM = "professor plum"
@@ -38,9 +39,9 @@ class Character(Enum):
 
 
 DECK = {
-    CardType.WEAPON: [weapon for weapon in Weapon],
-    CardType.ROOM: [room for room in Room],
-    CardType.CHARACTER: [character for character in Character]
+    CardType.WEAPON: [weapon for weapon in WeaponType],
+    CardType.ROOM: [room for room in RoomType],
+    CardType.CHARACTER: [character for character in CharType]
 }
 
 
@@ -49,11 +50,11 @@ class Card:
         self.card_type = CardType(card_type)
         match self.card_type:
             case CardType.ROOM:
-                self.name = Room(name)
+                self.name = RoomType(name)
             case CardType.WEAPON:
-                self.name = Weapon(name)
+                self.name = WeaponType(name)
             case CardType.CHARACTER:
-                self.name = Character(name)
+                self.name = CharType(name)
 
     @classmethod
     def all_cards(cls) -> list[Card]:
@@ -66,8 +67,8 @@ class Card:
     @classmethod
     def from_dict(cls, data_dict):
         return Card(
-            data_dict['card_type'],
-            data_dict['name']
+            data_dict["card_type"],
+            data_dict["name"]
         )
 
     def _identity(self):
@@ -91,13 +92,13 @@ class Card:
 class CaseFile:
     def __init__(self, room: Card, weapon: Card, character: Card):
         if room.card_type != CardType.ROOM:
-            raise ValueError(f'Invalid room card, received a {room.card_type.value} card')
+            raise ValueError(f"Invalid room card, received a {room.card_type.value} card")
 
         if weapon.card_type != CardType.WEAPON:
-            raise ValueError(f'Invalid weapon card, received a {weapon.card_type.value} card')
+            raise ValueError(f"Invalid weapon card, received a {weapon.card_type.value} card")
 
         if character.card_type != CardType.CHARACTER:
-            raise ValueError(f'Invalid character card, received a {character.card_type.value} card')
+            raise ValueError(f"Invalid character card, received a {character.card_type.value} card")
 
         self.room = room
         self.weapon = weapon
@@ -106,9 +107,9 @@ class CaseFile:
     @classmethod
     def from_dict(cls, data_dict):
         return CaseFile(
-            room=Card.from_dict(data_dict['room']),
-            weapon=Card.from_dict(data_dict['weapon']),
-            character=Card.from_dict(data_dict['character'])
+            room=Card.from_dict(data_dict["room"]),
+            weapon=Card.from_dict(data_dict["weapon"]),
+            character=Card.from_dict(data_dict["character"])
         )
 
     def accuse(self, room: Card, weapon: Card, character: Card) -> bool:
@@ -121,4 +122,57 @@ class CaseFile:
             "room": self.room.to_dict(),
             "weapon": self.weapon.to_dict(),
             "character": self.character.to_dict()
+        }
+
+
+class Character:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def from_dict(cls, data_dict) -> Character:
+        return Character()
+
+    def to_dict(self):
+        pass
+
+
+class Player:
+    def __init__(self, player_id: str, display_name: str):
+        self.player_id = player_id
+        self.display_name = display_name
+        self.character = None
+        self.hand = []
+        self.is_eliminated = False
+        self.is_connected = True
+
+    @classmethod
+    def from_dict(cls, data_dict: dict[str, Any]) -> Player:
+        # Instantiate player object
+        player = Player(
+            data_dict["player_id"],
+            data_dict["display_name"]
+        )
+
+        # Restore character
+        player.character = Character.from_dict(data_dict["character"]) if data_dict["character"] is not None else None
+
+        # Restore hand
+        player.hand = [Card.from_dict(card_dict) for card_dict in data_dict["hand"]]
+        
+        # Restore booleans
+        player.is_eliminated = data_dict["is_eliminated"]
+        player.is_connected = data_dict["is_connected"]
+
+        return player
+
+    def add_card(self, card: Card) -> None:
+        self.hand.append(card)
+
+    def eliminate(self):
+        self.is_eliminated = True
+
+    def to_dict(self):
+        return {
+            
         }

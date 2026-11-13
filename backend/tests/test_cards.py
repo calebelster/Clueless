@@ -6,7 +6,7 @@ from game.game import (
     CardType,
     CaseFile,
     DECK,
-    Character, Weapon, Room
+    CharType, WeaponType, RoomType
 )
 
 
@@ -42,13 +42,13 @@ def test_all_cards():
 @pytest.mark.parametrize(
     "card_type, name",
     [
-        (CardType.ROOM.value, Character.COLONEL_MUSTARD.value),
+        (CardType.ROOM.value, CharType.COLONEL_MUSTARD.value),
         (CardType.ROOM.value, "invalid_string"),
         ("abcdefg", "mrs.white"),
         ("invalid_string", "invalid_string"),
-        (CardType.WEAPON.value, Room.BILLIARD_ROOM.value),
+        (CardType.WEAPON.value, RoomType.BILLIARD_ROOM.value),
         (CardType.WEAPON.value, "roperope"),
-        (CardType.CHARACTER.value, Weapon.LEAD_PIPE.value),
+        (CardType.CHARACTER.value, WeaponType.LEAD_PIPE.value),
         (CardType.CHARACTER.value, "mr. white")
     ]
 )
@@ -60,12 +60,12 @@ def test_invalid_card_create(card_type, name):
 @pytest.mark.parametrize(
     "card_type, name",
     [
-        (CardType.ROOM.value, Room.BILLIARD_ROOM.value),
-        (CardType.ROOM.value, Room.DINING_ROOM.value),
-        (CardType.CHARACTER.value, Character.MISS_SCARLET.value),
-        (CardType.CHARACTER.value, Character.PROFESSOR_PLUM.value),
-        (CardType.WEAPON.value, Weapon.WRENCH.value),
-        (CardType.WEAPON.value, Weapon.REVOLVER.value)
+        (CardType.ROOM.value, RoomType.BILLIARD_ROOM.value),
+        (CardType.ROOM.value, RoomType.DINING_ROOM.value),
+        (CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
+        (CardType.CHARACTER.value, CharType.PROFESSOR_PLUM.value),
+        (CardType.WEAPON.value, WeaponType.WRENCH.value),
+        (CardType.WEAPON.value, WeaponType.REVOLVER.value)
     ]
 )
 def test_valid_card_create(card_type, name):
@@ -78,9 +78,9 @@ def test_valid_card_create(card_type, name):
 @pytest.mark.parametrize(
     "card_type, name",
     [
-        (CardType.WEAPON.value, Weapon.WRENCH.value),
-        (CardType.CHARACTER.value, Character.MRS_WHITE.value),
-        (CardType.ROOM.value, Room.CONSERVATORY.value),
+        (CardType.WEAPON.value, WeaponType.WRENCH.value),
+        (CardType.CHARACTER.value, CharType.MRS_WHITE.value),
+        (CardType.ROOM.value, RoomType.CONSERVATORY.value),
     ]
 )
 def test_card_equality(card_type, name):
@@ -90,9 +90,9 @@ def test_card_equality(card_type, name):
 @pytest.mark.parametrize(
     "card_type1, name1, card_type2, name2",
     [
-        (CardType.WEAPON.value, Weapon.WRENCH.value, CardType.WEAPON.value, Weapon.REVOLVER.value),
-        (CardType.CHARACTER.value, Character.MRS_WHITE.value, CardType.WEAPON.value, Weapon.WRENCH.value),
-        (CardType.ROOM.value, Room.CONSERVATORY.value, CardType.CHARACTER.value, Character.MISS_SCARLET.value),
+        (CardType.WEAPON.value, WeaponType.WRENCH.value, CardType.WEAPON.value, WeaponType.REVOLVER.value),
+        (CardType.CHARACTER.value, CharType.MRS_WHITE.value, CardType.WEAPON.value, WeaponType.WRENCH.value),
+        (CardType.ROOM.value, RoomType.CONSERVATORY.value, CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
     ]
 )
 def test_card_inequality(card_type1, name1, card_type2, name2):
@@ -103,16 +103,16 @@ def test_card_inequality(card_type1, name1, card_type2, name2):
     "card, data_dict",
     [
         (
-            Card(CardType.WEAPON.value, Weapon.WRENCH.value), 
-            {"card_type": CardType.WEAPON.value, "name": Weapon.WRENCH.value}
+            Card(CardType.WEAPON.value, WeaponType.WRENCH.value), 
+            {"card_type": CardType.WEAPON.value, "name": WeaponType.WRENCH.value}
         ),
         (
-            Card(CardType.CHARACTER.value, Character.MISS_SCARLET.value), 
-            {"card_type": CardType.CHARACTER.value, "name": Character.MISS_SCARLET.value}
+            Card(CardType.CHARACTER.value, CharType.MISS_SCARLET.value), 
+            {"card_type": CardType.CHARACTER.value, "name": CharType.MISS_SCARLET.value}
         ),
         (
-            Card(CardType.ROOM.value, Room.LOUNGE.value), 
-            {"card_type": CardType.ROOM.value, "name": Room.LOUNGE.value}
+            Card(CardType.ROOM.value, RoomType.LOUNGE.value), 
+            {"card_type": CardType.ROOM.value, "name": RoomType.LOUNGE.value}
         ),
     ]
 )
@@ -127,16 +127,16 @@ def test_save_card(card, data_dict):
     "data_dict, card",
     [
         (
-            {"card_type": CardType.WEAPON.value, "name": Weapon.CANDLESTICK.value},
-            Card(CardType.WEAPON.value, Weapon.CANDLESTICK.value)
+            {"card_type": CardType.WEAPON.value, "name": WeaponType.CANDLESTICK.value},
+            Card(CardType.WEAPON.value, WeaponType.CANDLESTICK.value)
         ),
         (
-            {"card_type": CardType.CHARACTER.value, "name": Character.MR_GREEN.value},
-            Card(CardType.CHARACTER.value, Character.MR_GREEN.value), 
+            {"card_type": CardType.CHARACTER.value, "name": CharType.MR_GREEN.value},
+            Card(CardType.CHARACTER.value, CharType.MR_GREEN.value), 
         ),
         (
-            {"card_type": CardType.ROOM.value, "name": Room.BALLROOM.value},
-            Card(CardType.ROOM.value, Room.BALLROOM.value)
+            {"card_type": CardType.ROOM.value, "name": RoomType.BALLROOM.value},
+            Card(CardType.ROOM.value, RoomType.BALLROOM.value)
         ),
     ]
 )
@@ -147,9 +147,9 @@ def test_load_card(data_dict, card):
 @pytest.mark.parametrize(
     "data_dict",
     [
-        {"card_type": CardType.WEAPON.value, "name": Weapon.ROPE.value},
-        {"card_type": CardType.CHARACTER.value, "name": Character.MRS_PEACOCK.value},
-        {"card_type": CardType.ROOM.value, "name": Room.KITCHEN.value}
+        {"card_type": CardType.WEAPON.value, "name": WeaponType.ROPE.value},
+        {"card_type": CardType.CHARACTER.value, "name": CharType.MRS_PEACOCK.value},
+        {"card_type": CardType.ROOM.value, "name": RoomType.KITCHEN.value}
     ]
 )
 def test_load_save_card(data_dict):
@@ -163,19 +163,19 @@ def test_load_save_card(data_dict):
     "room, weapon, character",
     [
         (
-            Card(CardType.WEAPON.value, Weapon.ROPE.value),
-            Card(CardType.WEAPON.value, Weapon.ROPE.value),
-            Card(CardType.CHARACTER.value, Character.COLONEL_MUSTARD.value),
+            Card(CardType.WEAPON.value, WeaponType.ROPE.value),
+            Card(CardType.WEAPON.value, WeaponType.ROPE.value),
+            Card(CardType.CHARACTER.value, CharType.COLONEL_MUSTARD.value),
         ),
         (
-            Card(CardType.ROOM.value, Room.CONSERVATORY.value),
-            Card(CardType.ROOM.value, Room.CONSERVATORY.value),
-            Card(CardType.CHARACTER.value, Character.COLONEL_MUSTARD.value),
+            Card(CardType.ROOM.value, RoomType.CONSERVATORY.value),
+            Card(CardType.ROOM.value, RoomType.CONSERVATORY.value),
+            Card(CardType.CHARACTER.value, CharType.COLONEL_MUSTARD.value),
         ),
         (
-            Card(CardType.ROOM.value, Room.CONSERVATORY.value),
-            Card(CardType.WEAPON.value, Weapon.ROPE.value),
-            Card(CardType.WEAPON.value, Weapon.ROPE.value),
+            Card(CardType.ROOM.value, RoomType.CONSERVATORY.value),
+            Card(CardType.WEAPON.value, WeaponType.ROPE.value),
+            Card(CardType.WEAPON.value, WeaponType.ROPE.value),
         )
 
     ]
@@ -196,28 +196,28 @@ def test_create_invalid_case_file(room, weapon, character):
             {
                 CardType.WEAPON.value: {
                     "card_type": CardType.WEAPON.value,
-                    "name": Weapon.CANDLESTICK.value
+                    "name": WeaponType.CANDLESTICK.value
                 },
                 CardType.ROOM.value: {
                     "card_type": CardType.ROOM.value,
-                    "name": Room.HALL.value
+                    "name": RoomType.HALL.value
                 },
                 CardType.CHARACTER.value: {
                     "card_type": CardType.CHARACTER.value,
-                    "name": Character.MR_GREEN.value
+                    "name": CharType.MR_GREEN.value
                 },
             },
             Card(
                 CardType.WEAPON.value,
-                Weapon.CANDLESTICK.value
+                WeaponType.CANDLESTICK.value
             ),
             Card(
                 CardType.ROOM.value,
-                Room.HALL.value,
+                RoomType.HALL.value,
             ),
             Card(
                 CardType.CHARACTER.value,
-                Character.MR_GREEN.value
+                CharType.MR_GREEN.value
             )
         )
     ]
@@ -236,29 +236,29 @@ def test_load_case_file(data_dict, weapon, room, character):
             CaseFile(
                 weapon=Card(
                     CardType.WEAPON.value,
-                    Weapon.CANDLESTICK.value
+                    WeaponType.CANDLESTICK.value
                 ),
                 room=Card(
                     CardType.ROOM.value,
-                    Room.HALL.value
+                    RoomType.HALL.value
                 ),
                 character=Card(
                     CardType.CHARACTER.value,
-                    Character.MR_GREEN.value
+                    CharType.MR_GREEN.value
                 )
             ),
             {
                 CardType.WEAPON.value: {
                     "card_type": CardType.WEAPON.value,
-                    "name": Weapon.CANDLESTICK.value
+                    "name": WeaponType.CANDLESTICK.value
                 },
                 CardType.ROOM.value: {
                     "card_type": CardType.ROOM.value,
-                    "name": Room.HALL.value
+                    "name": RoomType.HALL.value
                 },
                 CardType.CHARACTER.value: {
                     "card_type": CardType.CHARACTER.value,
-                    "name": Character.MR_GREEN.value
+                    "name": CharType.MR_GREEN.value
                 },
             }
         )
@@ -279,15 +279,15 @@ def test_save_case_file(case_file, data_dict):
         {
             "weapon": {
                 "card_type": CardType.WEAPON.value,
-                "name": Weapon.CANDLESTICK.value
+                "name": WeaponType.CANDLESTICK.value
             },
             "room": {
                 "card_type": CardType.ROOM.value,
-                "name": Room.HALL.value
+                "name": RoomType.HALL.value
             },
             "character": {
                 "card_type": CardType.CHARACTER.value,
-                "name": Character.MR_GREEN.value
+                "name": CharType.MR_GREEN.value
             }
         }
     ]
@@ -303,9 +303,9 @@ def test_load_save_case_file(data_dict):
 
 def test_accuse():
     # Test equality
-    room = Card(CardType.ROOM.value, Room.DINING_ROOM.value)
-    weapon = Card(CardType.WEAPON.value, Weapon.KNIFE.value)
-    character = Card(CardType.CHARACTER.value, Character.MR_GREEN.value)
+    room = Card(CardType.ROOM.value, RoomType.DINING_ROOM.value)
+    weapon = Card(CardType.WEAPON.value, WeaponType.KNIFE.value)
+    character = Card(CardType.CHARACTER.value, CharType.MR_GREEN.value)
 
     case = CaseFile(room, weapon, character)
 
@@ -313,9 +313,9 @@ def test_accuse():
     assert case.accuse(room, weapon, character)
 
     # Test inequality
-    wrong_room = Card(CardType.ROOM.value, Room.HALL.value)
-    wrong_weapon = Card(CardType.WEAPON.value, Weapon.REVOLVER.value)
-    wrong_character = Card(CardType.CHARACTER.value, Character.MRS_WHITE.value)
+    wrong_room = Card(CardType.ROOM.value, RoomType.HALL.value)
+    wrong_weapon = Card(CardType.WEAPON.value, WeaponType.REVOLVER.value)
+    wrong_character = Card(CardType.CHARACTER.value, CharType.MRS_WHITE.value)
 
     assert not case.accuse(wrong_room, weapon, character)
     assert not case.accuse(room, wrong_weapon, character)
