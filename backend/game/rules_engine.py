@@ -38,7 +38,316 @@ Accusations:
 
 import logging
 
+from game.game import (
+    Card,
+    CardType,
+    Game,
+    GameStatus,
+    Location,
+    LocationType,
+    Player,
+    Suggestion,
+)
+
 logger = logging.getLogger(__name__)
+
+
+class Reason:
+    OK = "ok"
+    CURR_PLAYER_NO_CHAR = "Current player has no assigned character"
+    GAME_NOT_STARTED_MSG = f"Game is not {GameStatus.STARTED.value}"
+    NOT_CURR_PLAYER_MSG = "Player is not current player"
+    PLAYER_ELIMINATED = "Player is eliminated"
+    ALREADY_MOVED = "Player has already moved this turn"
+    LOCATION_UNREACHABLE = "Location is not reachable from current location"
+    ALREADY_IN_LOCATION = "Player is already in target location"
+    HALLWAY_OCCUPIED = "Hallway is occupied"
+    MOVE_DURING_SUGGEST = "Player cannot move during active suggestion"
+    SUGGESTED_THIS_LOC = "Player has already made a suggestion this turn"
+    SUGGEST_IN_HALLWAY = "Player cannot suggest in hallway"
+    SUGGEST_DURING_SUGGEST = "Player cannot suggest during an active suggestion round"
+    DISPROVE_DURING_NOT_SUGGEST = "Player cannot disprove outside of an active suggestion round"
+    PASSING_WITH_VALID_DISPROVE = "Player cannot pass while holding a suggested card"
+    INVALID_DISPROVE_CARD = "Player cannot disprove with card not in current suggestion"
+
+
+class RulesEngine:
+    def _validate_generic(self, game: Game, player: Player) -> tuple[bool, str]:
+        # Is the game not STARTED?
+        if game.status != GameStatus.STARTED:
+            return False, Reason.GAME_NOT_STARTED_MSG
+        curr_player = game.get_current_player()
+
+        # Is the player not the current player?
+        if player.player_id != curr_player.player_id:
+            return False, Reason.NOT_CURR_PLAYER_MSG
+
+        if curr_player.character is None:
+            return False, Reason.CURR_PLAYER_NO_CHAR
+
+        return True, Reason.OK
+
+    def validate_move(self, game: Game, player: Player, location: Location) -> tuple[bool, str]:
+        # Generic validation for all actions
+        valid, reason = self._validate_generic(game, player)
+
+        if not valid:
+            return valid, reason
+
+        curr_player = game.get_current_player()
+
+        # Was the player eliminated?
+        if curr_player.is_eliminated:
+            return False, Reason.PLAYER_ELIMINATED
+
+        # Sanity check because I haven't implemented the character assignment
+        assert curr_player.character is not None
+
+        # Is this the first move of this player's turn?
+        if curr_player.character.moved_this_turn:
+            return False, Reason.ALREADY_MOVED
+
+        # Is the location reachable from the player's current location?
+        adj_locations = curr_player.character.get_location().get_neighbors()
+        if location not in adj_locations:
+            return False, Reason.LOCATION_UNREACHABLE
+
+        # Is the player already in this location?
+        if curr_player.character.get_location() == location:
+            return False, Reason.ALREADY_IN_LOCATION
+
+        # If the location is a hallway, is the hallway occupied?
+        if location.location_type == LocationType.HALLWAY:
+            # Get characters
+            characters = [
+                player.character for player in game.players.values() if player.character is not None
+            ]
+
+            if game.board.is_hallway_occupied(location, characters):
+                return False, Reason.HALLWAY_OCCUPIED
+
+        # Is it not a suggestion round?
+        if game.suggestion_round:
+            return False, Reason.MOVE_DURING_SUGGEST
+
+        return True, Reason.OK
+
+    def perform_move(self, game: Game, player: Player, location: Location):
+        valid, reason = self.validate_move(game, player, location)
+
+        if not valid:
+            return valid, reason
+
+        curr_player = game.get_current_player()
+
+        assert curr_player.character is not None
+
+        curr_player.character.move_to(location, suggest=False)
+
+        # TODO implement game state save
+
+        # TODO implement messaging
+
+        return valid, reason
+
+    def validate_suggest(
+        self, game: Game, player: Player, character: Card, weapon: Card
+    ) -> tuple[bool, str]:
+        # Generic validation for all actions
+        valid, reason = self._validate_generic(game, player)
+
+        curr_player = game.get_current_player()
+
+        assert curr_player.character is not None
+
+        # If player has been eliminated
+        if curr_player.is_eliminated:
+            return False, Reason.PLAYER_ELIMINATED
+
+        # If we are already in a suggestion round
+        if game.suggestion_round:
+            return False, Reason.SUGGEST_DURING_SUGGEST
+
+        # If player has already suggested in this location without moving
+        if curr_player.character.suggested_in_curr_loc:
+            return False, Reason.SUGGESTED_THIS_LOC
+
+        # If player is in a hallway
+        if curr_player.character.get_location().location_type == LocationType.HALLWAY:
+            return False, Reason.SUGGEST_IN_HALLWAY
+
+        if not valid:
+            return valid, reason
+
+        return True, Reason.OK
+
+    def perform_suggest(self, game: Game, player: Player, character: Card, weapon: Card):
+        valid, reason = self.validate_suggest(game, player, character, weapon)
+
+        if not valid:
+            return valid, reason
+
+        # Perfom Suggest
+        curr_player = game.get_current_player()
+        assert curr_player.character is not None
+
+        # Get current location
+        location = curr_player.character.get_location()
+
+        # Move suggested character to room if they're in game
+        player_to_move = None
+        for player_i in game.players.values():
+            assert player_i.character is not None
+            if player_i.character.name == character.name:
+                player_to_move = player_i
+                break
+
+        if player_to_move is not None:
+            assert player_to_move.character is not None
+            player_to_move.character.move_to(location, suggest=True)
+
+        # Turn location into card
+        room = Card(CardType.ROOM.value, location.name.value)
+
+        # Create suggestion
+        suggestion = Suggestion(player, weapon, room, character)
+
+        # Start suggestion round
+        game.start_suggest_round(suggestion)
+
+        # TODO implement game state save
+
+        # TODO implement messaging
+
+        return valid, reason
+
+    def validate_disprove(self, game: Game, player: Player, card: Card | None) -> tuple[bool, str]:
+        # Generic validation for all actions
+        valid, reason = self._validate_generic(game, player)
+
+        if not valid:
+            return valid, reason
+
+        # If it's not the suggestion round
+        if not game.suggestion_round:
+            return False, Reason.DISPROVE_DURING_NOT_SUGGEST
+
+        curr_player = game.get_current_player()
+
+        assert game.current_suggestion is not None
+        assert curr_player.character is not None
+
+        matching_cards = curr_player.get_matching_cards(
+            game.current_suggestion.weapon,
+            game.current_suggestion.room,
+            game.current_suggestion.character,
+        )
+
+        # If player passing when they have a valid card
+        if card is None and len(matching_cards) > 0:
+            return False, Reason.PASSING_WITH_VALID_DISPROVE
+
+        # If card is not in player's hand
+        if card is not None and not game.current_suggestion.matches(card):
+            return False, Reason.INVALID_DISPROVE_CARD
+
+        return True, Reason.OK
+
+    def perform_disprove(self, game: Game, player: Player, card: Card | None):
+        valid, reason = self.validate_disprove(game, player, card)
+
+        if not valid:
+            return valid, reason
+
+        # Perform Disprove
+        if card is None:
+            # Go on to next person
+            game.advance_suggest_round()
+
+            # TODO message / log to database?
+        else:
+            assert game.current_suggestion is not None
+            game.current_suggestion.record_disproval(player, card)
+
+            # TODO - Message / log to database?
+            game.stop_suggest_round()
+
+        # TODO - Save state to database?
+
+        return valid, reason
+
+    def validate_accuse(
+        self, game: Game, player: Player, weapon: Card, room: Card, character: Card
+    ) -> tuple[bool, str]:
+        # Generic validation for all actions
+        valid, reason = self._validate_generic(game, player)
+
+        if not valid:
+            return valid, reason
+
+        # If player is eliminated
+        curr_player = game.get_current_player()
+
+        if curr_player.is_eliminated:
+            return False, Reason.PLAYER_ELIMINATED
+
+        return True, Reason.OK
+
+    def perform_accuse(self, game: Game, player: Player, weapon: Card, room: Card, character: Card):
+        valid, reason = self.validate_accuse(game, player, weapon, room, character)
+
+        if not valid:
+            return valid, reason
+
+        curr_player = game.get_current_player()
+
+        assert game.case_file is not None
+        if game.case_file.accuse(room, weapon, character):
+            # TODO - End game actions
+            pass
+        else:
+            curr_player.eliminate()
+            valid, reason = self.perform_end_turn(game, player)
+
+        # TODO - Messaging / logging to db / save state
+
+        return valid, reason
+
+    def validate_end_turn(self, game: Game, player: Player) -> tuple[bool, str]:
+        # Generic validation for all actions
+        valid, reason = self._validate_generic(game, player)
+
+        if not valid:
+            return valid, reason
+
+        # If player is eliminated
+        curr_player = game.get_current_player()
+
+        if curr_player.is_eliminated:
+            return False, Reason.PLAYER_ELIMINATED
+
+        return True, Reason.OK
+
+    def perform_end_turn(self, game: Game, player: Player):
+        valid, reason = self.validate_end_turn(game, player)
+
+        if not valid:
+            return valid, reason
+
+        next_player = game.advance_turn()
+
+        if next_player is None:
+            # All players have been eliminated
+            # TODO - do end of game stuff
+            game.status = GameStatus.ENDED
+        else:
+            # We can actually advance to next turn
+            # TODO - do messaging
+            pass
+
+        # TODO - do state saving stuff
+
+        return valid, reason
 
 
 def _validate_move(game, player, payload):

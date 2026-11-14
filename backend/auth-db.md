@@ -10,10 +10,10 @@ After authentication, every message has two verified fields: playerId and displa
 ```python
 from game import db
 
-db.save_game(game_id, state)    # state must be a dict
-db.load_game(game_id)           # returns a copy, or None
+db.save_game(game_id, state)  # state must be a dict
+db.load_game(game_id)  # returns a copy, or None
 db.log_action(game_id, action)
-db.load_actions(game_id)        # oldest first
+db.load_actions(game_id)  # oldest first
 ```
 
 load_game() returns a copy, so call save_game() to keep changes. 

@@ -14,7 +14,6 @@ Run from backend/:
 
 """
 
-
 import pytest
 
 from game import auth, db
@@ -23,12 +22,15 @@ from game import auth, db
    " good " is treated as a valid token for player u1. Anything else is
     rejected the same way Firebase rejects a bad token: by raising ValueError.
 """
+
+
 def fake_verify(token, **kwargs):
     if token == "good":
         return {"uid": "u1"}
     raise ValueError("bad token")
 
-#Runs before every test so each one starts from a clean slate.
+
+# Runs before every test so each one starts from a clean slate.
 @pytest.fixture(autouse=True)
 def setup(monkeypatch):
     # Replace the real Firebase token check with the fake one above.
@@ -39,14 +41,17 @@ def setup(monkeypatch):
     auth._names.clear()
 
 
-#Send an AUTH_REQ with the given token and return the server's AUTH_RESP
+# Send an AUTH_REQ with the given token and return the server's AUTH_RESP
 def sign_in(token="good"):
-    return auth.login({"type": "AUTH_REQ", "sessionToken": token, "payload": {"displayName": "Buchi"}})
+    return auth.login(
+        {"type": "AUTH_REQ", "sessionToken": token, "payload": {"displayName": "Buchi"}}
+    )
+
 
 # ---- Authentication ----
 
 
-#FR-AU-1: valid token and display name produce a successful AUTH_RESP.
+# FR-AU-1: valid token and display name produce a successful AUTH_RESP.
 def test_sign_in_works():
     reply = sign_in()
     assert reply["type"] == "AUTH_RESP"
@@ -54,7 +59,8 @@ def test_sign_in_works():
     # The player ID must come from the verified token, not from the client.
     assert reply["payload"]["playerId"] == "u1"
 
-#NFR-SPR-2: a forged token is rejected at sign-in and on every later request.
+
+# NFR-SPR-2: a forged token is rejected at sign-in and on every later request.
 def test_bad_token_is_rejected():
     assert sign_in("forged")["payload"]["success"] is False
     # signed-in player's request still fails if it carries a forged token.
@@ -65,32 +71,34 @@ def test_bad_token_is_rejected():
 
 
 def test_must_sign_in_first():
-    #NFR-SPR-2: a valid token is not enough; the player must send AUTH_REQ first
+    # NFR-SPR-2: a valid token is not enough; the player must send AUTH_REQ first
     msg, error = auth.authenticate({"type": "MOVE_REQ", "sessionToken": "good"})
     # No sign_in() here, so the server has no record of this player.
     assert msg is None and error is not None
 
 
 def test_cannot_pretend_to_be_another_player():
-    #NFR-SPR-2: the server ignores any playerId the client claims."
+    # NFR-SPR-2: the server ignores any playerId the client claims."
     sign_in()
     msg, _ = auth.authenticate({"type": "MOVE_REQ", "sessionToken": "good", "playerId": "hacker"})
     # The client claims to be "hacker", but its token belongs to u1.
-     # The server overwrites the claim with the verified player.
+    # The server overwrites the claim with the verified player.
     assert msg["playerId"] == "u1"
     assert "sessionToken" not in msg
 
+
 # ---- Database ----
-#NFR-DB-9: a saved game state can be loaded back unchanged.
+# NFR-DB-9: a saved game state can be loaded back unchanged.
 def test_game_saves_and_loads():
     db.save_game("game-1", {"turn": "u1"})
     assert db.load_game("game-1") == {"turn": "u1"}
-     # A game that was never saved returns None instead of crashing.
+    # A game that was never saved returns None instead of crashing.
     assert db.load_game("missing") is None
 
-#NFR-DB-9: load_game() returns a copy, so only save_game() changes stored data.
-#Without, the Rules Engine could change a game by accident  by
-    # editing a state it loaded, with no save_game() call to show it happened.
+
+# NFR-DB-9: load_game() returns a copy, so only save_game() changes stored data.
+# Without, the Rules Engine could change a game by accident  by
+# editing a state it loaded, with no save_game() call to show it happened.
 def test_editing_loaded_state_does_not_change_saved_state():
     db.save_game("game-1", {"turn": "u1"})
     db.load_game("game-1")["turn"] = "u2"
