@@ -114,7 +114,7 @@ def broadcast(message: dict):
     for ws in clients:
         try:
             ws.send(text)
-        except Exception:
+        except Exception:  # noqa: BLE001
             dead.append(ws)
 
     for ws in dead:

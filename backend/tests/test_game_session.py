@@ -58,9 +58,31 @@ def test_full_game(monkeypatch):
 
     state_message, _notification = game_session.dispatch(_msg("SELECT_CHAR_REQ", "p2", "Quinton", characterId="Miss Scarlet"))
     assert state_message["payload"]["players"]["p2"]["characterId"] == "Miss Scarlet"
+    game_session.dispatch(_msg("SELECT_CHAR_REQ", "p3", "Caleb", characterId="Mrs. White"))
+    game_session.dispatch(_msg("JOIN_GAME_REQ", "p4", "Justin", gameId=game_id))
+    game_session.dispatch(_msg("SELECT_CHAR_REQ", "p4", "Justin", characterId="Colonel Mustard"))
 
-    state_message, _notification = game_session.dispatch(_msg("START_GAME_REQ", "p2", "Quinton", gameId=game_id))
+    state_message, notification = game_session.dispatch(_msg("START_GAME_REQ", "p2", "Quinton", gameId=game_id))
+    assert notification is None
+    assert state_message["payload"]["errorCode"] == "NOT_HOST"
+
+    state_message, _notification = game_session.dispatch(_msg("START_GAME_REQ", "p3", "Caleb", gameId=game_id))
     assert state_message["payload"]["status"] == "started"
+    saved = db.load_game(game_id)
+    assert saved["turnOrder"][0] == "p2"
+    assert saved["stubState"]["currentTurnPlayer"] == "p2"
+    assert saved["stubState"]["boardLocations"]["Miss Scarlet"] == "hall-lounge"
+    dealt = []
+    for info in saved["players"].values():
+        dealt.extend(info["hand"])
+    dealt_names = set()
+    for card in dealt:
+        dealt_names.add((card["category"], card["name"]))
+    case_file = saved["caseFile"]
+    assert ("suspect", case_file["suspect"]) not in dealt_names
+    assert ("weapon", case_file["weapon"]) not in dealt_names
+    assert ("room", case_file["room"]) not in dealt_names
+    assert len(dealt) == 18
 
     state_message, notification = game_session.dispatch(_msg("MOVE_REQ", "p2", "Quinton", targetLocationId="hall"))
     assert seen["action"] == "MOVE_REQ"
@@ -92,3 +114,34 @@ def test_reject_player_not_joined():
     assert notification is None
     assert state_message["type"] == "ACTION_REJECTED"
     assert state_message["payload"]["errorCode"] == "PLAYER_NOT_IN_GAME"
+
+
+def test_reject_taken_character():
+    state_message, _notification = game_session.dispatch(_msg("CREATE_GAME_REQ"))
+    game_id = state_message["payload"]["gameId"]
+    game_session.dispatch(_msg("JOIN_GAME_REQ", "p2", "Quinton", gameId=game_id))
+    game_session.dispatch(_msg("SELECT_CHAR_REQ", characterId="Miss Scarlet"))
+
+    state_message, notification = game_session.dispatch(
+        _msg("SELECT_CHAR_REQ", "p2", "Quinton", characterId="Miss Scarlet")
+    )
+    assert notification is None
+    assert state_message["payload"]["errorCode"] == "CHARACTER_TAKEN"
+
+    state_message, notification = game_session.dispatch(
+        _msg("SELECT_CHAR_REQ", "p2", "Quinton", characterId="The Butler")
+    )
+    assert state_message["payload"]["errorCode"] == "CHARACTER_UNKNOWN"
+
+
+def test_reject_start_without_enough_players():
+    state_message, _notification = game_session.dispatch(_msg("CREATE_GAME_REQ"))
+    game_id = state_message["payload"]["gameId"]
+    game_session.dispatch(_msg("JOIN_GAME_REQ", "p2", "Quinton", gameId=game_id))
+    game_session.dispatch(_msg("SELECT_CHAR_REQ", characterId="Miss Scarlet"))
+    game_session.dispatch(_msg("SELECT_CHAR_REQ", "p2", "Quinton", characterId="Mrs. White"))
+
+    state_message, notification = game_session.dispatch(_msg("START_GAME_REQ", gameId=game_id))
+    assert notification is None
+    assert state_message["payload"]["errorCode"] == "PLAYER_COUNT"
+    assert db.load_game(game_id)["status"] == "lobby"
