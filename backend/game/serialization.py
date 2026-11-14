@@ -19,6 +19,7 @@ from datetime import date, datetime
 class SerializationError(TypeError):
     "Raised when game state cannot be stored in Firestore"
 
+
 def to_storable(obj, _path="state"):
     "Return a Firestore-safe copy of obj, Never edits obj"
     if obj is None or isinstance(obj, (bool, int, float, str)):
@@ -59,6 +60,7 @@ def to_storable(obj, _path="state"):
         return out
 
     raise SerializationError(f"{_path}: cannot store {type(obj).__name__}")
+
 
 def from_storable(doc, cls=None):
     """

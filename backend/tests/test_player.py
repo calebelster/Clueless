@@ -13,7 +13,7 @@ from game.game import Card, CardType, Character, CharType, Player, RoomType, Wea
                 "character": Character(CharType.COLONEL_MUSTARD.value).to_dict(),
                 "hand": [],
                 "is_eliminated": False,
-                "is_connected": False
+                "is_connected": False,
             }
         ),
         (
@@ -24,10 +24,10 @@ from game.game import Card, CardType, Character, CharType, Player, RoomType, Wea
                 "hand": [
                     Card(CardType.WEAPON.value, WeaponType.ROPE.value).to_dict(),
                     Card(CardType.CHARACTER.value, CharType.PROFESSOR_PLUM.value).to_dict(),
-                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict()
+                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict(),
                 ],
                 "is_eliminated": False,
-                "is_connected": False
+                "is_connected": False,
             }
         ),
         (
@@ -37,7 +37,7 @@ from game.game import Card, CardType, Character, CharType, Player, RoomType, Wea
                 "character": Character(CharType.COLONEL_MUSTARD.value).to_dict(),
                 "hand": [],
                 "is_eliminated": True,
-                "is_connected": False
+                "is_connected": False,
             }
         ),
         (
@@ -47,7 +47,7 @@ from game.game import Card, CardType, Character, CharType, Player, RoomType, Wea
                 "character": Character(CharType.COLONEL_MUSTARD.value).to_dict(),
                 "hand": [],
                 "is_eliminated": False,
-                "is_connected": True
+                "is_connected": True,
             }
         ),
         (
@@ -58,13 +58,13 @@ from game.game import Card, CardType, Character, CharType, Player, RoomType, Wea
                 "hand": [
                     Card(CardType.WEAPON.value, WeaponType.ROPE.value).to_dict(),
                     Card(CardType.CHARACTER.value, CharType.PROFESSOR_PLUM.value).to_dict(),
-                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict()
+                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict(),
                 ],
                 "is_eliminated": True,
-                "is_connected": True
+                "is_connected": True,
             }
         ),
-    ]
+    ],
 )
 def test_load_player(data_dict):
     player = Player(data_dict["player_id"], data_dict["display_name"])
@@ -75,7 +75,7 @@ def test_load_player(data_dict):
     player.is_eliminated = data_dict["is_eliminated"]
 
     test_player = Player.from_dict(data_dict)
-    
+
     assert test_player.player_id == player.player_id
     assert test_player.display_name == player.display_name
     if player.character is not None and test_player.character is not None:
@@ -85,6 +85,7 @@ def test_load_player(data_dict):
 
     assert set(test_player.hand) == set(player.hand)
     assert test_player.is_eliminated == player.is_eliminated
+
 
 @pytest.mark.parametrize(
     "data_dict",
@@ -96,7 +97,7 @@ def test_load_player(data_dict):
                 "character": Character(CharType.COLONEL_MUSTARD.value).to_dict(),
                 "hand": [],
                 "is_eliminated": False,
-                "is_connected": False
+                "is_connected": False,
             }
         ),
         (
@@ -107,10 +108,10 @@ def test_load_player(data_dict):
                 "hand": [
                     Card(CardType.WEAPON.value, WeaponType.ROPE.value).to_dict(),
                     Card(CardType.CHARACTER.value, CharType.PROFESSOR_PLUM.value).to_dict(),
-                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict()
+                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict(),
                 ],
                 "is_eliminated": False,
-                "is_connected": False
+                "is_connected": False,
             }
         ),
         (
@@ -120,7 +121,7 @@ def test_load_player(data_dict):
                 "character": Character(CharType.COLONEL_MUSTARD.value).to_dict(),
                 "hand": [],
                 "is_eliminated": True,
-                "is_connected": False
+                "is_connected": False,
             }
         ),
         (
@@ -130,7 +131,7 @@ def test_load_player(data_dict):
                 "character": Character(CharType.COLONEL_MUSTARD.value).to_dict(),
                 "hand": [],
                 "is_eliminated": False,
-                "is_connected": True
+                "is_connected": True,
             }
         ),
         (
@@ -141,13 +142,13 @@ def test_load_player(data_dict):
                 "hand": [
                     Card(CardType.WEAPON.value, WeaponType.ROPE.value).to_dict(),
                     Card(CardType.CHARACTER.value, CharType.PROFESSOR_PLUM.value).to_dict(),
-                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict()
+                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict(),
                 ],
                 "is_eliminated": True,
-                "is_connected": True
+                "is_connected": True,
             }
         ),
-    ]
+    ],
 )
 def test_save_player(data_dict):
     player = Player(data_dict["player_id"], data_dict["display_name"])
@@ -182,7 +183,7 @@ def test_save_player(data_dict):
                 "character": Character(CharType.COLONEL_MUSTARD.value).to_dict(),
                 "hand": [],
                 "is_eliminated": False,
-                "is_connected": False
+                "is_connected": False,
             }
         ),
         (
@@ -193,10 +194,10 @@ def test_save_player(data_dict):
                 "hand": [
                     Card(CardType.WEAPON.value, WeaponType.ROPE.value).to_dict(),
                     Card(CardType.CHARACTER.value, CharType.PROFESSOR_PLUM.value).to_dict(),
-                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict()
+                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict(),
                 ],
                 "is_eliminated": False,
-                "is_connected": False
+                "is_connected": False,
             }
         ),
         (
@@ -206,7 +207,7 @@ def test_save_player(data_dict):
                 "character": Character(CharType.COLONEL_MUSTARD.value).to_dict(),
                 "hand": [],
                 "is_eliminated": True,
-                "is_connected": False
+                "is_connected": False,
             }
         ),
         (
@@ -216,7 +217,7 @@ def test_save_player(data_dict):
                 "character": Character(CharType.COLONEL_MUSTARD.value).to_dict(),
                 "hand": [],
                 "is_eliminated": False,
-                "is_connected": True
+                "is_connected": True,
             }
         ),
         (
@@ -227,13 +228,13 @@ def test_save_player(data_dict):
                 "hand": [
                     Card(CardType.WEAPON.value, WeaponType.ROPE.value).to_dict(),
                     Card(CardType.CHARACTER.value, CharType.PROFESSOR_PLUM.value).to_dict(),
-                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict()
+                    Card(CardType.ROOM.value, RoomType.HALL.value).to_dict(),
                 ],
                 "is_eliminated": True,
-                "is_connected": True
+                "is_connected": True,
             }
         ),
-    ]
+    ],
 )
 def test_load_save_player(data_dict):
     out_dict = Player.from_dict(data_dict).to_dict()
@@ -264,14 +265,13 @@ def test_player_add_card():
 
     cards = [
         Card(CardType.WEAPON.value, WeaponType.ROPE.value),
-        Card(CardType.ROOM.value, RoomType.BALLROOM.value)
+        Card(CardType.ROOM.value, RoomType.BALLROOM.value),
     ] * 5
 
     for i in range(10):
         player.add_card(cards[i])
         assert player.hand[-1] == cards[i]
         assert len(player.hand) == i + 1
-
 
 
 @pytest.fixture
@@ -287,7 +287,7 @@ def player():
             Card(CardType.WEAPON.value, WeaponType.ROPE.value),
             Card(CardType.ROOM.value, RoomType.LOUNGE.value),
             Card(CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
-            []
+            [],
         ),
         (
             [
@@ -298,7 +298,7 @@ def player():
             Card(CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
             [
                 Card(CardType.WEAPON.value, WeaponType.ROPE.value),
-            ]
+            ],
         ),
         (
             [
@@ -311,7 +311,7 @@ def player():
             [
                 Card(CardType.WEAPON.value, WeaponType.ROPE.value),
                 Card(CardType.ROOM.value, RoomType.LOUNGE.value),
-            ]
+            ],
         ),
         (
             [
@@ -326,13 +326,12 @@ def player():
             Card(CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
             [
                 Card(CardType.ROOM.value, RoomType.LOUNGE.value),
-            ]
+            ],
         ),
-    ]
+    ],
 )
 def test_matching_cards(player, hand, weapon, room, character, expected):
     for card in hand:
         player.add_card(card)
 
     assert set(player.get_matching_cards(weapon, room, character)) == set(expected)
-    

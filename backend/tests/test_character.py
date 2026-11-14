@@ -12,7 +12,7 @@ from game.game import Character, CharType, HallType, Location, LocationType, Roo
         (CharType.MRS_PEACOCK, Character.starting_location[CharType.MRS_PEACOCK]),
         (CharType.MR_GREEN, Character.starting_location[CharType.MR_GREEN]),
         (CharType.MRS_WHITE, Character.starting_location[CharType.MRS_WHITE]),
-    ]
+    ],
 )
 def test_create_default(char_type, location_name):
     location = Location(LocationType.HALLWAY.value, location_name.value)
@@ -25,19 +25,12 @@ def test_create_default(char_type, location_name):
     assert not character.moved_by_suggestion
 
 
-@pytest.mark.parametrize(
-    "hallway_name",
-    [hall for hall in HallType]
-)
+@pytest.mark.parametrize("hallway_name", [hall for hall in HallType])
 def test_move_to_hallway(hallway_name):
     character = Character(CharType.MISS_SCARLET.value)
-    location = Location(
-        LocationType.HALLWAY.value,
-        hallway_name.value
-    )
+    location = Location(LocationType.HALLWAY.value, hallway_name.value)
     starting_location = Location(
-        LocationType.HALLWAY.value,
-        Character.starting_location[character.name].value
+        LocationType.HALLWAY.value, Character.starting_location[character.name].value
     )
 
     assert character.location == starting_location
@@ -49,19 +42,12 @@ def test_move_to_hallway(hallway_name):
     assert character.get_location() == location
 
 
-@pytest.mark.parametrize(
-    "room_name",
-    [room for room in RoomType]
-)
+@pytest.mark.parametrize("room_name", [room for room in RoomType])
 def test_move_to_room(room_name):
     character = Character(CharType.MISS_SCARLET.value)
-    location = Location(
-        LocationType.ROOM.value,
-        room_name.value
-    )
+    location = Location(LocationType.ROOM.value, room_name.value)
     starting_location = Location(
-        LocationType.HALLWAY.value,
-        Character.starting_location[character.name].value
+        LocationType.HALLWAY.value, Character.starting_location[character.name].value
     )
 
     assert character.location == starting_location
@@ -71,7 +57,6 @@ def test_move_to_room(room_name):
 
     assert character.location == location
     assert character.get_location() == location
-
 
 
 @pytest.mark.parametrize(
@@ -82,35 +67,37 @@ def test_move_to_room(room_name):
                 "name": CharType.MISS_SCARLET.value,
                 "location": {
                     "location_type": LocationType.HALLWAY.value,
-                    "name": Character.starting_location[CharType.MISS_SCARLET].value
+                    "name": Character.starting_location[CharType.MISS_SCARLET].value,
                 },
                 "moved_by_suggestion": False,
                 "moved_this_turn": False,
-                "suggested_in_curr_loc": False
+                "suggested_in_curr_loc": False,
             },
             Character(CharType.MISS_SCARLET.value),
-            Location(LocationType.HALLWAY.value, Character.starting_location[CharType.MISS_SCARLET].value),
+            Location(
+                LocationType.HALLWAY.value, Character.starting_location[CharType.MISS_SCARLET].value
+            ),
             False,
             False,
-            False
+            False,
         ),
         (
             {
                 "name": CharType.COLONEL_MUSTARD.value,
                 "location": {
                     "location_type": LocationType.HALLWAY.value,
-                    "name": HallType.STUDY_HALL.value
+                    "name": HallType.STUDY_HALL.value,
                 },
                 "moved_by_suggestion": True,
                 "moved_this_turn": False,
-                "suggested_in_curr_loc": False
+                "suggested_in_curr_loc": False,
             },
             Character(CharType.COLONEL_MUSTARD.value),
             Location(LocationType.HALLWAY.value, HallType.STUDY_HALL.value),
             True,
             False,
-            False
-        ),  
+            False,
+        ),
         (
             {
                 "name": CharType.COLONEL_MUSTARD.value,
@@ -120,13 +107,13 @@ def test_move_to_room(room_name):
                 },
                 "moved_by_suggestion": False,
                 "moved_this_turn": True,
-                "suggested_in_curr_loc": True
+                "suggested_in_curr_loc": True,
             },
             Character(CharType.COLONEL_MUSTARD.value),
             Location(LocationType.ROOM.value, RoomType.DINING_ROOM.value),
             False,
             True,
-            True
+            True,
         ),
         (
             {
@@ -137,30 +124,32 @@ def test_move_to_room(room_name):
                 },
                 "moved_by_suggestion": True,
                 "moved_this_turn": False,
-                "suggested_in_curr_loc": True
+                "suggested_in_curr_loc": True,
             },
             Character(CharType.MR_GREEN.value),
             Location(
-                LocationType.HALLWAY.value,
-                Character.starting_location[CharType.MR_GREEN].value
+                LocationType.HALLWAY.value, Character.starting_location[CharType.MR_GREEN].value
             ),
             True,
             False,
-            True
+            True,
         ),
-    ]
+    ],
 )
-def test_load_character(data_dict, character, location, moved_by_suggestion, moved_this_turn, suggested_in_curr_loc):
+def test_load_character(
+    data_dict, character, location, moved_by_suggestion, moved_this_turn, suggested_in_curr_loc
+):
     character.location = location
     character.moved_by_suggestion = moved_by_suggestion
     character.moved_this_turn = moved_this_turn
     character.suggested_in_curr_loc = suggested_in_curr_loc
 
     test_character = Character.from_dict(data_dict)
-    
+
     assert test_character.name == character.name
     assert test_character.location == character.location
     assert test_character.moved_by_suggestion == character.moved_by_suggestion
+
 
 @pytest.mark.parametrize(
     "character, data_dict",
@@ -171,12 +160,12 @@ def test_load_character(data_dict, character, location, moved_by_suggestion, mov
                 "name": CharType.MISS_SCARLET.value,
                 "location": {
                     "location_type": LocationType.HALLWAY.value,
-                    "name": Character.starting_location[CharType.MISS_SCARLET].value
+                    "name": Character.starting_location[CharType.MISS_SCARLET].value,
                 },
                 "moved_by_suggestion": False,
                 "moved_this_turn": False,
-                "suggested_in_curr_loc": False
-            }
+                "suggested_in_curr_loc": False,
+            },
         ),
         (
             Character(CharType.COLONEL_MUSTARD.value),
@@ -184,25 +173,25 @@ def test_load_character(data_dict, character, location, moved_by_suggestion, mov
                 "name": CharType.COLONEL_MUSTARD.value,
                 "location": {
                     "location_type": LocationType.HALLWAY.value,
-                    "name": Character.starting_location[CharType.COLONEL_MUSTARD].value
+                    "name": Character.starting_location[CharType.COLONEL_MUSTARD].value,
                 },
                 "moved_by_suggestion": False,
                 "moved_this_turn": False,
-                "suggested_in_curr_loc": False
-            }
+                "suggested_in_curr_loc": False,
+            },
         ),
         (
-            Character(CharType.PROFESSOR_PLUM.value), 
+            Character(CharType.PROFESSOR_PLUM.value),
             {
                 "name": CharType.PROFESSOR_PLUM.value,
                 "location": {
                     "location_type": LocationType.HALLWAY.value,
-                    "name": Character.starting_location[CharType.PROFESSOR_PLUM].value
+                    "name": Character.starting_location[CharType.PROFESSOR_PLUM].value,
                 },
                 "moved_by_suggestion": False,
                 "moved_this_turn": False,
-                "suggested_in_curr_loc": False
-            }
+                "suggested_in_curr_loc": False,
+            },
         ),
         (
             Character(CharType.MRS_PEACOCK.value),
@@ -210,12 +199,12 @@ def test_load_character(data_dict, character, location, moved_by_suggestion, mov
                 "name": CharType.MRS_PEACOCK.value,
                 "location": {
                     "location_type": LocationType.HALLWAY.value,
-                    "name": Character.starting_location[CharType.MRS_PEACOCK].value
+                    "name": Character.starting_location[CharType.MRS_PEACOCK].value,
                 },
                 "moved_by_suggestion": False,
                 "moved_this_turn": False,
-                "suggested_in_curr_loc": False
-            }
+                "suggested_in_curr_loc": False,
+            },
         ),
         (
             Character(CharType.MR_GREEN.value),
@@ -223,12 +212,12 @@ def test_load_character(data_dict, character, location, moved_by_suggestion, mov
                 "name": CharType.MR_GREEN.value,
                 "location": {
                     "location_type": LocationType.HALLWAY.value,
-                    "name": Character.starting_location[CharType.MR_GREEN].value
+                    "name": Character.starting_location[CharType.MR_GREEN].value,
                 },
                 "moved_by_suggestion": False,
                 "moved_this_turn": False,
-                "suggested_in_curr_loc": False
-            }
+                "suggested_in_curr_loc": False,
+            },
         ),
         (
             Character(CharType.MRS_WHITE.value),
@@ -236,77 +225,77 @@ def test_load_character(data_dict, character, location, moved_by_suggestion, mov
                 "name": CharType.MRS_WHITE.value,
                 "location": {
                     "location_type": LocationType.HALLWAY.value,
-                    "name": Character.starting_location[CharType.MRS_WHITE].value
+                    "name": Character.starting_location[CharType.MRS_WHITE].value,
                 },
                 "moved_by_suggestion": False,
                 "moved_this_turn": False,
-                "suggested_in_curr_loc": False
-            }
+                "suggested_in_curr_loc": False,
+            },
         ),
-    ]
+    ],
 )
 def test_save_character(character, data_dict):
     out_dict = character.to_dict()
 
     assert len(out_dict) == len(data_dict)
     assert set(out_dict.keys()) == set(data_dict.keys())
-    assert out_dict['name'] == data_dict['name']
-    assert out_dict['moved_by_suggestion'] == data_dict['moved_by_suggestion']
-    assert out_dict['location']['location_type'] == data_dict['location']['location_type']
-    assert out_dict['location']['name'] == data_dict['location']['name']
-    
+    assert out_dict["name"] == data_dict["name"]
+    assert out_dict["moved_by_suggestion"] == data_dict["moved_by_suggestion"]
+    assert out_dict["location"]["location_type"] == data_dict["location"]["location_type"]
+    assert out_dict["location"]["name"] == data_dict["location"]["name"]
+
 
 @pytest.mark.parametrize(
     "data_dict",
     [
         {
-                "name": CharType.MISS_SCARLET.value,
-                "location": {
-                    "location_type": LocationType.HALLWAY.value,
-                    "name": Character.starting_location[CharType.MISS_SCARLET].value,
-                },
-                "moved_by_suggestion": False,
-                "moved_this_turn": True,
-                "suggested_in_curr_loc": True
+            "name": CharType.MISS_SCARLET.value,
+            "location": {
+                "location_type": LocationType.HALLWAY.value,
+                "name": Character.starting_location[CharType.MISS_SCARLET].value,
+            },
+            "moved_by_suggestion": False,
+            "moved_this_turn": True,
+            "suggested_in_curr_loc": True,
         },
         {
-                "name": CharType.COLONEL_MUSTARD.value,
-                "location": {
-                    "location_type": LocationType.HALLWAY.value,
-                    "name": HallType.STUDY_HALL.value,
-                },
-                "moved_by_suggestion": True,
-                "moved_this_turn": False,
-                "suggested_in_curr_loc": True
+            "name": CharType.COLONEL_MUSTARD.value,
+            "location": {
+                "location_type": LocationType.HALLWAY.value,
+                "name": HallType.STUDY_HALL.value,
+            },
+            "moved_by_suggestion": True,
+            "moved_this_turn": False,
+            "suggested_in_curr_loc": True,
         },
         {
-                "name": CharType.MRS_WHITE.value,
-                "location": {
-                    "location_type": LocationType.ROOM.value,
-                    "name": RoomType.BILLIARD_ROOM.value
-                },
-                "moved_by_suggestion": False,
-                "moved_this_turn": False,
-                "suggested_in_curr_loc": False
+            "name": CharType.MRS_WHITE.value,
+            "location": {
+                "location_type": LocationType.ROOM.value,
+                "name": RoomType.BILLIARD_ROOM.value,
+            },
+            "moved_by_suggestion": False,
+            "moved_this_turn": False,
+            "suggested_in_curr_loc": False,
         },
         {
-                "name": CharType.PROFESSOR_PLUM.value,
-                "location": {
-                    "location_type": LocationType.HALLWAY.value,
-                    "name": HallType.CONSERVATORY_BALLROOM.value
-                },
-                "moved_by_suggestion": True,
-                "moved_this_turn": False,
-                "suggested_in_curr_loc": False
+            "name": CharType.PROFESSOR_PLUM.value,
+            "location": {
+                "location_type": LocationType.HALLWAY.value,
+                "name": HallType.CONSERVATORY_BALLROOM.value,
+            },
+            "moved_by_suggestion": True,
+            "moved_this_turn": False,
+            "suggested_in_curr_loc": False,
         },
-    ]
+    ],
 )
 def test_load_save_character(data_dict):
     out_dict = Character.from_dict(data_dict).to_dict()
 
     assert len(out_dict) == len(data_dict)
     assert set(out_dict.keys()) == set(data_dict.keys())
-    assert out_dict['name'] == data_dict['name']
-    assert out_dict['moved_by_suggestion'] == data_dict['moved_by_suggestion']
-    assert out_dict['location']['location_type'] == data_dict['location']['location_type']
-    assert out_dict['location']['name'] == data_dict['location']['name']
+    assert out_dict["name"] == data_dict["name"]
+    assert out_dict["moved_by_suggestion"] == data_dict["moved_by_suggestion"]
+    assert out_dict["location"]["location_type"] == data_dict["location"]["location_type"]
+    assert out_dict["location"]["name"] == data_dict["location"]["name"]

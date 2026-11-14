@@ -24,4 +24,6 @@ def init_firebase():
         return
 
     firebase_admin.initialize_app(credentials.Certificate(cred_path))
-    logger.info("Firebase connected (project %s)", firebase_admin.get_app().options.get("projectId"))
+    logger.info(
+        "Firebase connected (project %s)", firebase_admin.get_app().options.get("projectId")
+    )

@@ -31,9 +31,7 @@ def test_save_game_state():
             {
                 "game_id": "1234",
                 "status": GameStatus.STARTED.value,
-                "players": {
-                    "host": Player("host", "host").to_dict()
-                },
+                "players": {"host": Player("host", "host").to_dict()},
                 "host": "host",
                 "case_file": CaseFile(
                     Card(CardType.ROOM.value, RoomType.HALL.value),
@@ -45,18 +43,17 @@ def test_save_game_state():
                 "disprove_turn_index": 0,
                 "current_suggestion": None,
                 "suggestion_round": False,
-                "created_at": datetime.now(UTC)
+                "created_at": datetime.now(UTC),
             }
-
         )
-    ]
+    ],
 )
 def test_load_save_game_state(data_dict):
     out_dict = Game.from_dict(data_dict).to_dict()
 
     assert out_dict["game_id"] == data_dict["game_id"]
     assert out_dict["status"] == data_dict["status"]
-    
+
     assert len(out_dict["players"]) == len(data_dict["players"])
     assert set(out_dict["players"].keys()) == set(data_dict["players"].keys())
     for player_id, player_dict in data_dict["players"].items():
@@ -65,17 +62,26 @@ def test_load_save_game_state(data_dict):
         assert test_player_dict["display_name"] == player_dict["display_name"]
         if player_dict["character"] is not None:
             assert test_player_dict["character"]["name"] == player_dict["character"]["name"]
-            assert Location.from_dict(test_player_dict["character"]["location"]) == Location.from_dict(player_dict["character"]["location"])
-            assert test_player_dict["character"]["moved_by_suggestion"] == player_dict["character"]["moved_by_suggestion"]
+            assert Location.from_dict(
+                test_player_dict["character"]["location"]
+            ) == Location.from_dict(player_dict["character"]["location"])
+            assert (
+                test_player_dict["character"]["moved_by_suggestion"]
+                == player_dict["character"]["moved_by_suggestion"]
+            )
         else:
             assert test_player_dict["character"] == player_dict["character"]
-        assert {Card.from_dict(card) for card in test_player_dict["hand"]} == {Card.from_dict(card) for card in player_dict["hand"]}
+        assert {Card.from_dict(card) for card in test_player_dict["hand"]} == {
+            Card.from_dict(card) for card in player_dict["hand"]
+        }
         assert test_player_dict["is_eliminated"] == player_dict["is_eliminated"]
         assert test_player_dict["is_connected"] == player_dict["is_connected"]
-    
+
     assert out_dict["host"] == data_dict["host"]
     if data_dict["case_file"] is not None:
-        assert CaseFile.from_dict(out_dict["case_file"]) == CaseFile.from_dict(data_dict["case_file"])
+        assert CaseFile.from_dict(out_dict["case_file"]) == CaseFile.from_dict(
+            data_dict["case_file"]
+        )
     else:
         assert out_dict["case_file"] == data_dict["case_file"]
 
@@ -88,19 +94,38 @@ def test_load_save_game_state(data_dict):
 
     if data_dict["current_suggestion"] is not None:
         assert len(out_dict["current_suggestion"]) == len(data_dict["current_suggestion"])
-        assert set(out_dict["current_suggestion"].keys()) == set(data_dict["current_suggestion"].keys())
+        assert set(out_dict["current_suggestion"].keys()) == set(
+            data_dict["current_suggestion"].keys()
+        )
 
-        assert Card.from_dict(out_dict["current_suggestion"]["weapon"]) == Card.from_dict(data_dict["current_suggestion"]["weapon"])
-        assert Card.from_dict(out_dict["current_suggestion"]["room"]) == Card.from_dict(data_dict["current_suggestion"]["room"])
-        assert Card.from_dict(out_dict["current_suggestion"]["character"]) == Card.from_dict(data_dict["current_suggestion"]["character"])
-        
+        assert Card.from_dict(out_dict["current_suggestion"]["weapon"]) == Card.from_dict(
+            data_dict["current_suggestion"]["weapon"]
+        )
+        assert Card.from_dict(out_dict["current_suggestion"]["room"]) == Card.from_dict(
+            data_dict["current_suggestion"]["room"]
+        )
+        assert Card.from_dict(out_dict["current_suggestion"]["character"]) == Card.from_dict(
+            data_dict["current_suggestion"]["character"]
+        )
+
         if data_dict["current_suggestion"]["revealed_card"] is not None:
-            assert Card.from_dict(out_dict["current_suggestion"]["revealed_card"]) == Card.from_dict(data_dict["current_suggestion"]["revealed_card"])
+            assert Card.from_dict(
+                out_dict["current_suggestion"]["revealed_card"]
+            ) == Card.from_dict(data_dict["current_suggestion"]["revealed_card"])
         else:
-            assert out_dict["current_suggestion"]["revealed_card"] == data_dict["current_suggestion"]["revealed_card"]
+            assert (
+                out_dict["current_suggestion"]["revealed_card"]
+                == data_dict["current_suggestion"]["revealed_card"]
+            )
 
-        assert out_dict["current_suggestion"]["suggester"] == data_dict["current_suggestion"]["suggester"]
-        assert out_dict["current_suggestion"]["disprover"] == data_dict["current_suggestion"]["disprover"]
+        assert (
+            out_dict["current_suggestion"]["suggester"]
+            == data_dict["current_suggestion"]["suggester"]
+        )
+        assert (
+            out_dict["current_suggestion"]["disprover"]
+            == data_dict["current_suggestion"]["disprover"]
+        )
     else:
         assert out_dict["current_suggestion"] == data_dict["current_suggestion"]
 

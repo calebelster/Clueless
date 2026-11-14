@@ -7,6 +7,7 @@ from game.game import Board, Character, CharType, HallType, Location, LocationTy
 def test_hallway_neighbors():
     pass
 
+
 # TODO
 def test_room_neighbors():
     pass
@@ -16,26 +17,14 @@ def test_room_neighbors():
     "data_dict, location",
     [
         (
-            {
-                "location_type": LocationType.HALLWAY.value,
-                "name": HallType.BALLROOM_KITCHEN.value
-            },
-            Location(
-                LocationType.HALLWAY.value,
-                HallType.BALLROOM_KITCHEN.value
-            )
+            {"location_type": LocationType.HALLWAY.value, "name": HallType.BALLROOM_KITCHEN.value},
+            Location(LocationType.HALLWAY.value, HallType.BALLROOM_KITCHEN.value),
         ),
         (
-            {
-                "location_type": LocationType.ROOM.value,
-                "name": RoomType.LOUNGE.value
-            },
-            Location(
-                LocationType.ROOM.value,
-                RoomType.LOUNGE.value
-            )
-        )
-    ]
+            {"location_type": LocationType.ROOM.value, "name": RoomType.LOUNGE.value},
+            Location(LocationType.ROOM.value, RoomType.LOUNGE.value),
+        ),
+    ],
 )
 def test_load_location(data_dict, location):
     assert Location.from_dict(data_dict) == location
@@ -45,26 +34,14 @@ def test_load_location(data_dict, location):
     "data_dict, location",
     [
         (
-            {
-                "location_type": LocationType.HALLWAY.value,
-                "name": HallType.BALLROOM_KITCHEN.value
-            },
-            Location(
-                LocationType.HALLWAY.value,
-                HallType.BALLROOM_KITCHEN.value
-            )
+            {"location_type": LocationType.HALLWAY.value, "name": HallType.BALLROOM_KITCHEN.value},
+            Location(LocationType.HALLWAY.value, HallType.BALLROOM_KITCHEN.value),
         ),
         (
-            {
-                "location_type": LocationType.ROOM.value,
-                "name": RoomType.LOUNGE.value
-            },
-            Location(
-                LocationType.ROOM.value,
-                RoomType.LOUNGE.value
-            )
-        )
-    ]
+            {"location_type": LocationType.ROOM.value, "name": RoomType.LOUNGE.value},
+            Location(LocationType.ROOM.value, RoomType.LOUNGE.value),
+        ),
+    ],
 )
 def test_save_location(data_dict, location):
     out_dict = location.to_dict()
@@ -78,15 +55,9 @@ def test_save_location(data_dict, location):
 @pytest.mark.parametrize(
     "data_dict",
     [
-        {
-            "location_type": LocationType.HALLWAY.value,
-            "name": HallType.BALLROOM_KITCHEN.value
-        },  
-        {
-            "location_type": LocationType.ROOM.value,
-            "name": RoomType.LOUNGE.value
-        },   
-    ]
+        {"location_type": LocationType.HALLWAY.value, "name": HallType.BALLROOM_KITCHEN.value},
+        {"location_type": LocationType.ROOM.value, "name": RoomType.LOUNGE.value},
+    ],
 )
 def test_load_save_location(data_dict):
     out_dict = Location.from_dict(data_dict).to_dict()
@@ -102,8 +73,8 @@ def test_load_save_location(data_dict):
     [
         (HallType.BALLROOM_KITCHEN.value),
         (HallType.STUDY_HALL.value),
-        (HallType.LIBRARY_BILLIARD_ROOM.value)
-    ]
+        (HallType.LIBRARY_BILLIARD_ROOM.value),
+    ],
 )
 def test_board_hallway_occcupied(location_name):
     location = Location(LocationType.HALLWAY.value, location_name)

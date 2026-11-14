@@ -1,4 +1,4 @@
-"Shared test setup: every test starts with an empty in-memory database, never Firestore "
+"Shared test setup: every test starts with an empty in-memory database, never Firestore"
 
 import pytest
 

@@ -21,6 +21,7 @@ clients = []
 connections = {}
 _connections_lock = threading.Lock()
 
+
 def register(uid, ws):
     """Associate an open socket with a verified player"""
     with _connections_lock:
@@ -92,7 +93,7 @@ def deliver(ws, envelopes):
             logger.error("[COMM] dropped envelope with unknown target: %r", to)
 
 
- # ---- Legacy Comm.py --- #
+# ---- Legacy Comm.py --- #
 def send_to_client(ws, message: dict):
     """Send one message to one connected client"""
 
@@ -153,7 +154,7 @@ def handle_message(ws, raw: str):
         if not isinstance(payload, dict):
             payload = {}
 
-    except (ValueError, KeyError, TypeError):
+    except ValueError, KeyError, TypeError:
         logger.warning("[COMM] bad message: %r", raw)
         return
 
@@ -182,7 +183,6 @@ def handle_message(ws, raw: str):
         send_to_client(ws, response)
         return
 
-
     # Every other application request must be authenticated.
     authenticated_message, error = auth.authenticate(message)
 
@@ -207,8 +207,7 @@ def handle_message(ws, raw: str):
         deliver(ws, result)
         return
 
-    
-   # Legacy contract: (state_message, notification). Kept until Game Session
+    # Legacy contract: (state_message, notification). Kept until Game Session
     # moves to envelopes so nothing breaks mid-integration.
     state_message, notification = result
 

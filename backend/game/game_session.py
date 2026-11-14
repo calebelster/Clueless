@@ -26,7 +26,6 @@ from game import db, rules_engine
 logger = logging.getLogger(__name__)
 
 
-
 CHARACTERS = (
     "Miss Scarlet",
     "Colonel Mustard",
@@ -83,7 +82,7 @@ def _rejected(error_code, reason):
         "type": "ACTION_REJECTED",
         "payload": {"errorCode": error_code, "reason": reason},
     }
-    
+
 
 def _load_game(game_id):
     """
@@ -91,7 +90,7 @@ def _load_game(game_id):
     """
     if not game_id:
         return None
-    
+
     try:
         return db.load_game(game_id)
     except ValueError:
@@ -117,7 +116,7 @@ def _setup_game(game_state):
     """
     Sets up the game FR-GS-5, FR-GS-6, FR-GS-7, FR-GS-8
     """
-    
+
     players = game_state["players"]
     deck = []
 
@@ -127,7 +126,7 @@ def _setup_game(game_state):
         "weapon": random.choice(WEAPONS),
         "room": random.choice(ROOMS),
     }
-    
+
     # Put every suspect into the deck except the one hidden in the Case File
     for name in CHARACTERS:
         if name != case_file["suspect"]:
@@ -140,7 +139,7 @@ def _setup_game(game_state):
     for name in ROOMS:
         if name != case_file["room"]:
             deck.append({"category": "room", "name": name})
-    
+
     # Shuffle the deck
     random.shuffle(deck)
 
@@ -181,10 +180,10 @@ def find_game_player(player_id):
         record = db.load_player(player_id)
     except ValueError:
         return None, None
-    
+
     if not record or not record.get("gameId"):
         return None, None
-    
+
     game_id = record["gameId"]
     return game_id, _load_game(game_id)
 
@@ -193,7 +192,7 @@ def _saved(game_id, game_state, event_type, description):
     """
     Record actions into the database
     """
-    
+
     db.log_action(game_id, {"type": event_type, "description": description})
     stub_state = game_state.get("stubState") or {}
     state_message = {
@@ -209,12 +208,14 @@ def _saved(game_id, game_state, event_type, description):
         },
     }
     notification = {
-    "type": "EVENT_LOG_NOTIFICATION",
-    "payload": {"eventType": event_type, "description": description},
+        "type": "EVENT_LOG_NOTIFICATION",
+        "payload": {"eventType": event_type, "description": description},
     }
     return state_message, notification
 
-#======================================Core Functions============================================
+
+# ======================================Core Functions============================================
+
 
 def dispatch(message):
     """
@@ -276,7 +277,7 @@ def create_game(host_id, display_name):
             "activeStatus": {},
         },
     }
-    
+
     db.save_game(game_id, game_state)
     db.save_player(host_id, display_name, game_id)
     logger.info(f"[GAME] Game created {game_id}, host: {host_id}")
@@ -308,7 +309,7 @@ def join_game(game_id, player_id, display_name):
     db.save_game(game_id, game_state)
     db.save_player(player_id, display_name, game_id)
     logger.info(f"[GAME] {player_id} joined {game_id} ({len(game_state['players'])} players)")
-    
+
     return _saved(game_id, game_state, "PLAYER_JOINED", f"{display_name} joined {game_id}")
 
 
@@ -318,21 +319,21 @@ def select_character(player_id, character_id):
     Save the player's character
     """
     game_id, game_state = find_game_player(player_id)
-    
+
     if game_id is None:
         return _rejected("PLAYER_NOT_IN_GAME", "Player is not in a game"), None
     if game_state is None:
         if not game_id:
             game_id = "unknown"
         return _rejected("GAME_NOT_FOUND", f"game {game_id} not found"), None
-    
+
     # player_id is not in the game
     if player_id not in game_state.get("players", {}):
         return _rejected("PLAYER_NOT_IN_GAME", f"player {player_id} is not in {game_id}"), None
     # character is not one of the six available suspects
     if character_id not in CHARACTERS:
         return _rejected("CHARACTER_UNKNOWN", "Character is not one of the six suspects"), None
-    
+
     # Check if character is already chosen
     for other_id, info in game_state["players"].items():
         if other_id != player_id and info.get("characterId") == character_id:
@@ -340,10 +341,10 @@ def select_character(player_id, character_id):
 
     player = game_state["players"][player_id]
     player["characterId"] = character_id
-    db.save_game(game_id, game_state) # Store character
-    
+    db.save_game(game_id, game_state)  # Store character
+
     logger.info(f"[GAME] {player_id} selected {character_id} in {game_id}")
-    
+
     return _saved(game_id, game_state, "CHARACTER_SELECTED", f"{player_id} selected {character_id}")
 
 
@@ -353,7 +354,7 @@ def start_game(game_id, player_id):
     Stat the game
     """
     game_state = _load_game(game_id)
-    
+
     if game_state is None:
         if not game_id:
             game_id = "unknown"
@@ -372,7 +373,7 @@ def start_game(game_id, player_id):
     # Both starts as false
     missing_character = False
     has_scarlet = False
-    
+
     # Iterate through all players and heck if each player picked a character
     for info in players.values():
         character_id = info.get("characterId")
@@ -401,7 +402,7 @@ def handle_action(player_id, message):
     """
     msg_type = message.get("type")
     game_id, game_state = find_game_player(player_id)
-    
+
     if game_id is None:
         return _rejected("PLAYER_NOT_IN_GAME", "Player is not in a game"), None
     if game_state is None:
@@ -414,11 +415,11 @@ def handle_action(player_id, message):
     payload = message.get("payload")
     if not isinstance(payload, dict):
         payload = {}
-        
+
     player = game_state["players"][player_id]
     logger.info(f"[GAME] Looked up {game_id} | {player_id} -> forward {msg_type} to Rules Engine")
     accepted, reason = _rules_engine_stub(msg_type, game_state, player, payload)
-    
+
     if not accepted:
         error_msg = reason or "Action rejected by rule engine"
         return _rejected("ILLEGAL_ACTION", error_msg), None

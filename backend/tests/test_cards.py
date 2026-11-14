@@ -8,7 +8,7 @@ def test_all_cards():
     room_gt_len = len(DECK[CardType.ROOM])
     char_gt_len = len(DECK[CardType.CHARACTER])
     deck_gt_len = weapon_gt_len + room_gt_len + char_gt_len
-    
+
     deck = Card.all_cards()
 
     # Correct number of each card type
@@ -42,8 +42,8 @@ def test_all_cards():
         (CardType.WEAPON.value, RoomType.BILLIARD_ROOM.value),
         (CardType.WEAPON.value, "roperope"),
         (CardType.CHARACTER.value, WeaponType.LEAD_PIPE.value),
-        (CardType.CHARACTER.value, "mr. white")
-    ]
+        (CardType.CHARACTER.value, "mr. white"),
+    ],
 )
 def test_invalid_card_create(card_type, name):
     with pytest.raises(ValueError):
@@ -58,8 +58,8 @@ def test_invalid_card_create(card_type, name):
         (CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
         (CardType.CHARACTER.value, CharType.PROFESSOR_PLUM.value),
         (CardType.WEAPON.value, WeaponType.WRENCH.value),
-        (CardType.WEAPON.value, WeaponType.REVOLVER.value)
-    ]
+        (CardType.WEAPON.value, WeaponType.REVOLVER.value),
+    ],
 )
 def test_valid_card_create(card_type, name):
     card = Card(card_type, name)
@@ -74,7 +74,7 @@ def test_valid_card_create(card_type, name):
         (CardType.WEAPON.value, WeaponType.WRENCH.value),
         (CardType.CHARACTER.value, CharType.MRS_WHITE.value),
         (CardType.ROOM.value, RoomType.CONSERVATORY.value),
-    ]
+    ],
 )
 def test_card_equality(card_type, name):
     assert Card(card_type, name) == Card(card_type, name)
@@ -83,10 +83,25 @@ def test_card_equality(card_type, name):
 @pytest.mark.parametrize(
     "card_type1, name1, card_type2, name2",
     [
-        (CardType.WEAPON.value, WeaponType.WRENCH.value, CardType.WEAPON.value, WeaponType.REVOLVER.value),
-        (CardType.CHARACTER.value, CharType.MRS_WHITE.value, CardType.WEAPON.value, WeaponType.WRENCH.value),
-        (CardType.ROOM.value, RoomType.CONSERVATORY.value, CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
-    ]
+        (
+            CardType.WEAPON.value,
+            WeaponType.WRENCH.value,
+            CardType.WEAPON.value,
+            WeaponType.REVOLVER.value,
+        ),
+        (
+            CardType.CHARACTER.value,
+            CharType.MRS_WHITE.value,
+            CardType.WEAPON.value,
+            WeaponType.WRENCH.value,
+        ),
+        (
+            CardType.ROOM.value,
+            RoomType.CONSERVATORY.value,
+            CardType.CHARACTER.value,
+            CharType.MISS_SCARLET.value,
+        ),
+    ],
 )
 def test_card_inequality(card_type1, name1, card_type2, name2):
     assert Card(card_type1, name1) != Card(card_type2, name2)
@@ -96,18 +111,18 @@ def test_card_inequality(card_type1, name1, card_type2, name2):
     "card, data_dict",
     [
         (
-            Card(CardType.WEAPON.value, WeaponType.WRENCH.value), 
-            {"card_type": CardType.WEAPON.value, "name": WeaponType.WRENCH.value}
+            Card(CardType.WEAPON.value, WeaponType.WRENCH.value),
+            {"card_type": CardType.WEAPON.value, "name": WeaponType.WRENCH.value},
         ),
         (
-            Card(CardType.CHARACTER.value, CharType.MISS_SCARLET.value), 
-            {"card_type": CardType.CHARACTER.value, "name": CharType.MISS_SCARLET.value}
+            Card(CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
+            {"card_type": CardType.CHARACTER.value, "name": CharType.MISS_SCARLET.value},
         ),
         (
-            Card(CardType.ROOM.value, RoomType.LOUNGE.value), 
-            {"card_type": CardType.ROOM.value, "name": RoomType.LOUNGE.value}
+            Card(CardType.ROOM.value, RoomType.LOUNGE.value),
+            {"card_type": CardType.ROOM.value, "name": RoomType.LOUNGE.value},
         ),
-    ]
+    ],
 )
 def test_save_card(card, data_dict):
     out_dict = card.to_dict()
@@ -121,17 +136,17 @@ def test_save_card(card, data_dict):
     [
         (
             {"card_type": CardType.WEAPON.value, "name": WeaponType.CANDLESTICK.value},
-            Card(CardType.WEAPON.value, WeaponType.CANDLESTICK.value)
+            Card(CardType.WEAPON.value, WeaponType.CANDLESTICK.value),
         ),
         (
             {"card_type": CardType.CHARACTER.value, "name": CharType.MR_GREEN.value},
-            Card(CardType.CHARACTER.value, CharType.MR_GREEN.value), 
+            Card(CardType.CHARACTER.value, CharType.MR_GREEN.value),
         ),
         (
             {"card_type": CardType.ROOM.value, "name": RoomType.BALLROOM.value},
-            Card(CardType.ROOM.value, RoomType.BALLROOM.value)
+            Card(CardType.ROOM.value, RoomType.BALLROOM.value),
         ),
-    ]
+    ],
 )
 def test_load_card(data_dict, card):
     assert Card.from_dict(data_dict) == card
@@ -142,8 +157,8 @@ def test_load_card(data_dict, card):
     [
         {"card_type": CardType.WEAPON.value, "name": WeaponType.ROPE.value},
         {"card_type": CardType.CHARACTER.value, "name": CharType.MRS_PEACOCK.value},
-        {"card_type": CardType.ROOM.value, "name": RoomType.KITCHEN.value}
-    ]
+        {"card_type": CardType.ROOM.value, "name": RoomType.KITCHEN.value},
+    ],
 )
 def test_load_save_card(data_dict):
     out_dict = Card.from_dict(data_dict).to_dict()
@@ -169,17 +184,12 @@ def test_load_save_card(data_dict):
             Card(CardType.ROOM.value, RoomType.CONSERVATORY.value),
             Card(CardType.WEAPON.value, WeaponType.ROPE.value),
             Card(CardType.WEAPON.value, WeaponType.ROPE.value),
-        )
-
-    ]
+        ),
+    ],
 )
 def test_create_invalid_case_file(room, weapon, character):
     with pytest.raises(ValueError):
-        CaseFile(
-            room=room,
-            weapon=weapon,
-            character=character
-        )
+        CaseFile(room=room, weapon=weapon, character=character)
 
 
 @pytest.mark.parametrize(
@@ -189,31 +199,25 @@ def test_create_invalid_case_file(room, weapon, character):
             {
                 CardType.WEAPON.value: {
                     "card_type": CardType.WEAPON.value,
-                    "name": WeaponType.CANDLESTICK.value
+                    "name": WeaponType.CANDLESTICK.value,
                 },
                 CardType.ROOM.value: {
                     "card_type": CardType.ROOM.value,
-                    "name": RoomType.HALL.value
+                    "name": RoomType.HALL.value,
                 },
                 CardType.CHARACTER.value: {
                     "card_type": CardType.CHARACTER.value,
-                    "name": CharType.MR_GREEN.value
+                    "name": CharType.MR_GREEN.value,
                 },
             },
-            Card(
-                CardType.WEAPON.value,
-                WeaponType.CANDLESTICK.value
-            ),
+            Card(CardType.WEAPON.value, WeaponType.CANDLESTICK.value),
             Card(
                 CardType.ROOM.value,
                 RoomType.HALL.value,
             ),
-            Card(
-                CardType.CHARACTER.value,
-                CharType.MR_GREEN.value
-            )
+            Card(CardType.CHARACTER.value, CharType.MR_GREEN.value),
         )
-    ]
+    ],
 )
 def test_load_case_file(data_dict, weapon, room, character):
     case_file = CaseFile.from_dict(data_dict)
@@ -227,35 +231,26 @@ def test_load_case_file(data_dict, weapon, room, character):
     [
         (
             CaseFile(
-                weapon=Card(
-                    CardType.WEAPON.value,
-                    WeaponType.CANDLESTICK.value
-                ),
-                room=Card(
-                    CardType.ROOM.value,
-                    RoomType.HALL.value
-                ),
-                character=Card(
-                    CardType.CHARACTER.value,
-                    CharType.MR_GREEN.value
-                )
+                weapon=Card(CardType.WEAPON.value, WeaponType.CANDLESTICK.value),
+                room=Card(CardType.ROOM.value, RoomType.HALL.value),
+                character=Card(CardType.CHARACTER.value, CharType.MR_GREEN.value),
             ),
             {
                 CardType.WEAPON.value: {
                     "card_type": CardType.WEAPON.value,
-                    "name": WeaponType.CANDLESTICK.value
+                    "name": WeaponType.CANDLESTICK.value,
                 },
                 CardType.ROOM.value: {
                     "card_type": CardType.ROOM.value,
-                    "name": RoomType.HALL.value
+                    "name": RoomType.HALL.value,
                 },
                 CardType.CHARACTER.value: {
                     "card_type": CardType.CHARACTER.value,
-                    "name": CharType.MR_GREEN.value
+                    "name": CharType.MR_GREEN.value,
                 },
-            }
+            },
         )
-    ]
+    ],
 )
 def test_save_case_file(case_file, data_dict):
     out_dict = case_file.to_dict()
@@ -270,20 +265,11 @@ def test_save_case_file(case_file, data_dict):
     "data_dict",
     [
         {
-            "weapon": {
-                "card_type": CardType.WEAPON.value,
-                "name": WeaponType.CANDLESTICK.value
-            },
-            "room": {
-                "card_type": CardType.ROOM.value,
-                "name": RoomType.HALL.value
-            },
-            "character": {
-                "card_type": CardType.CHARACTER.value,
-                "name": CharType.MR_GREEN.value
-            }
+            "weapon": {"card_type": CardType.WEAPON.value, "name": WeaponType.CANDLESTICK.value},
+            "room": {"card_type": CardType.ROOM.value, "name": RoomType.HALL.value},
+            "character": {"card_type": CardType.CHARACTER.value, "name": CharType.MR_GREEN.value},
         }
-    ]
+    ],
 )
 def test_load_save_case_file(data_dict):
     out_dict = CaseFile.from_dict(data_dict).to_dict()

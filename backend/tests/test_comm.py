@@ -40,6 +40,7 @@ def test_bad_message_does_not_crash():
 
     assert ws.sent == []  # nothing sent, nothing crashed
 
+
 def test_auth_request_is_routed_to_authentication(monkeypatch):
     clients.clear()
 

@@ -70,14 +70,14 @@ class Reason:
     PASSING_WITH_VALID_DISPROVE = "Player cannot pass while holding a suggested card"
     INVALID_DISPROVE_CARD = "Player cannot disprove with card not in current suggestion"
 
-class RulesEngine:
 
+class RulesEngine:
     def _validate_generic(self, game: Game, player: Player) -> tuple[bool, str]:
         # Is the game not STARTED?
         if game.status != GameStatus.STARTED:
             return False, Reason.GAME_NOT_STARTED_MSG
         curr_player = game.get_current_player()
-        
+
         # Is the player not the current player?
         if player.player_id != curr_player.player_id:
             return False, Reason.NOT_CURR_PLAYER_MSG
@@ -102,7 +102,7 @@ class RulesEngine:
 
         # Sanity check because I haven't implemented the character assignment
         assert curr_player.character is not None
-        
+
         # Is this the first move of this player's turn?
         if curr_player.character.moved_this_turn:
             return False, Reason.ALREADY_MOVED
@@ -119,7 +119,9 @@ class RulesEngine:
         # If the location is a hallway, is the hallway occupied?
         if location.location_type == LocationType.HALLWAY:
             # Get characters
-            characters = [player.character for player in game.players.values() if player.character is not None]
+            characters = [
+                player.character for player in game.players.values() if player.character is not None
+            ]
 
             if game.board.is_hallway_occupied(location, characters):
                 return False, Reason.HALLWAY_OCCUPIED
@@ -127,7 +129,7 @@ class RulesEngine:
         # Is it not a suggestion round?
         if game.suggestion_round:
             return False, Reason.MOVE_DURING_SUGGEST
-        
+
         return True, Reason.OK
 
     def perform_move(self, game: Game, player: Player, location: Location):
@@ -143,12 +145,14 @@ class RulesEngine:
         curr_player.character.move_to(location, suggest=False)
 
         # TODO implement game state save
-        
+
         # TODO implement messaging
 
         return valid, reason
 
-    def validate_suggest(self, game: Game, player: Player, character: Card, weapon: Card) -> tuple[bool, str]:
+    def validate_suggest(
+        self, game: Game, player: Player, character: Card, weapon: Card
+    ) -> tuple[bool, str]:
         # Generic validation for all actions
         valid, reason = self._validate_generic(game, player)
 
@@ -167,14 +171,14 @@ class RulesEngine:
         # If player has already suggested in this location without moving
         if curr_player.character.suggested_in_curr_loc:
             return False, Reason.SUGGESTED_THIS_LOC
-        
+
         # If player is in a hallway
         if curr_player.character.get_location().location_type == LocationType.HALLWAY:
-            return False, Reason.SUGGEST_IN_HALLWAY 
+            return False, Reason.SUGGEST_IN_HALLWAY
 
         if not valid:
             return valid, reason
-        
+
         return True, Reason.OK
 
     def perform_suggest(self, game: Game, player: Player, character: Card, weapon: Card):
@@ -189,8 +193,8 @@ class RulesEngine:
 
         # Get current location
         location = curr_player.character.get_location()
-        
-        # Move suggested character to room if they're in game 
+
+        # Move suggested character to room if they're in game
         player_to_move = None
         for player_i in game.players.values():
             assert player_i.character is not None
@@ -212,7 +216,7 @@ class RulesEngine:
         game.start_suggest_round(suggestion)
 
         # TODO implement game state save
-        
+
         # TODO implement messaging
 
         return valid, reason
@@ -236,7 +240,7 @@ class RulesEngine:
         matching_cards = curr_player.get_matching_cards(
             game.current_suggestion.weapon,
             game.current_suggestion.room,
-            game.current_suggestion.character
+            game.current_suggestion.character,
         )
 
         # If player passing when they have a valid card
@@ -246,7 +250,7 @@ class RulesEngine:
         # If card is not in player's hand
         if card is not None and not game.current_suggestion.matches(card):
             return False, Reason.INVALID_DISPROVE_CARD
-        
+
         return True, Reason.OK
 
     def perform_disprove(self, game: Game, player: Player, card: Card | None):
@@ -254,7 +258,7 @@ class RulesEngine:
 
         if not valid:
             return valid, reason
-        
+
         # Perform Disprove
         if card is None:
             # Go on to next person
@@ -270,10 +274,11 @@ class RulesEngine:
 
         # TODO - Save state to database?
 
-
         return valid, reason
 
-    def validate_accuse(self, game: Game, player: Player, weapon: Card, room: Card, character: Card) -> tuple[bool, str]:
+    def validate_accuse(
+        self, game: Game, player: Player, weapon: Card, room: Card, character: Card
+    ) -> tuple[bool, str]:
         # Generic validation for all actions
         valid, reason = self._validate_generic(game, player)
 
@@ -293,7 +298,7 @@ class RulesEngine:
 
         if not valid:
             return valid, reason
-        
+
         curr_player = game.get_current_player()
 
         assert game.case_file is not None
@@ -320,7 +325,7 @@ class RulesEngine:
 
         if curr_player.is_eliminated:
             return False, Reason.PLAYER_ELIMINATED
-        
+
         return True, Reason.OK
 
     def perform_end_turn(self, game: Game, player: Player):
@@ -337,11 +342,11 @@ class RulesEngine:
             game.status = GameStatus.ENDED
         else:
             # We can actually advance to next turn
-            # TODO - do messaging 
+            # TODO - do messaging
             pass
 
         # TODO - do state saving stuff
-        
+
         return valid, reason
 
 

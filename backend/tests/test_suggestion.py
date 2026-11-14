@@ -5,10 +5,7 @@ from game.game import Card, CardType, CharType, Player, RoomType, Suggestion, We
 
 @pytest.fixture
 def player():
-    return Player(
-        "1234",
-        "1234-display"
-    )
+    return Player("1234", "1234-display")
 
 
 @pytest.mark.parametrize(
@@ -29,7 +26,7 @@ def player():
             Card(CardType.ROOM.value, RoomType.KITCHEN.value),
             Card(CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
         ),
-    ]
+    ],
 )
 def test_create_suggestion(player, weapon, room, character):
     suggestion = Suggestion(player, weapon, room, character)
@@ -49,23 +46,23 @@ def test_create_suggestion(player, weapon, room, character):
             Card(CardType.ROOM.value, RoomType.BALLROOM.value),
             Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value),
             Card(CardType.WEAPON.value, WeaponType.KNIFE.value),
-            "disprover"
+            "disprover",
         ),
         (
             Card(CardType.WEAPON.value, WeaponType.KNIFE.value),
             Card(CardType.ROOM.value, RoomType.BALLROOM.value),
             Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value),
             Card(CardType.ROOM.value, RoomType.BALLROOM.value),
-            "disprover"
+            "disprover",
         ),
         (
             Card(CardType.WEAPON.value, WeaponType.KNIFE.value),
             Card(CardType.ROOM.value, RoomType.BALLROOM.value),
             Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value),
             Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value),
-            "disprover"
-        )
-    ]
+            "disprover",
+        ),
+    ],
 )
 def test_suggestion_record_disprove(player, weapon, room, character, card, disprover):
     suggestion = Suggestion(player, weapon, room, character)
@@ -84,23 +81,23 @@ def test_suggestion_record_disprove(player, weapon, room, character, card, dispr
             Card(CardType.ROOM.value, RoomType.BALLROOM.value),
             Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value),
             Card(CardType.WEAPON.value, WeaponType.REVOLVER.value),
-            "disprover"
+            "disprover",
         ),
         (
             Card(CardType.WEAPON.value, WeaponType.KNIFE.value),
             Card(CardType.ROOM.value, RoomType.BALLROOM.value),
             Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value),
             Card(CardType.ROOM.value, RoomType.BILLIARD_ROOM.value),
-            "disprover"
+            "disprover",
         ),
         (
             Card(CardType.WEAPON.value, WeaponType.KNIFE.value),
             Card(CardType.ROOM.value, RoomType.BALLROOM.value),
             Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value),
             Card(CardType.CHARACTER.value, CharType.MISS_SCARLET.value),
-            "disprover"
-        )
-    ]
+            "disprover",
+        ),
+    ],
 )
 def test_suggestion_record_disprove_fail(player, weapon, room, character, card, disprover):
     suggestion = Suggestion(player, weapon, room, character)
@@ -124,8 +121,8 @@ def test_suggestion_record_disprove_fail(player, weapon, room, character, card, 
                 "room": Card(CardType.ROOM.value, RoomType.BALLROOM.value).to_dict(),
                 "character": Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value).to_dict(),
                 "disprover": None,
-                "revealed_card": None
-            }
+                "revealed_card": None,
+            },
         ),
         (
             Card(CardType.WEAPON.value, WeaponType.CANDLESTICK.value),
@@ -139,10 +136,12 @@ def test_suggestion_record_disprove_fail(player, weapon, room, character, card, 
                 "room": Card(CardType.ROOM.value, RoomType.LOUNGE.value).to_dict(),
                 "character": Card(CardType.CHARACTER.value, CharType.MR_GREEN.value).to_dict(),
                 "disprover": "disprover",
-                "revealed_card": Card(CardType.WEAPON.value, WeaponType.CANDLESTICK.value).to_dict()
-            }
-        )
-    ]
+                "revealed_card": Card(
+                    CardType.WEAPON.value, WeaponType.CANDLESTICK.value
+                ).to_dict(),
+            },
+        ),
+    ],
 )
 def test_save_suggestion(player, weapon, room, character, disprover, revealed_card, data_dict):
     suggestion = Suggestion(player, weapon, room, character)
@@ -152,54 +151,54 @@ def test_save_suggestion(player, weapon, room, character, disprover, revealed_ca
     out_dict = suggestion.to_dict()
     assert len(out_dict) == len(data_dict)
     assert set(out_dict.keys()) == set(data_dict.keys())
-    assert out_dict['suggester'] == data_dict['suggester']
-    assert out_dict['weapon'] == data_dict['weapon']
-    assert out_dict['room'] == data_dict['room']
-    assert out_dict['character'] == data_dict['character']
-    if data_dict['disprover']:
-        assert out_dict['disprover'] == data_dict['disprover']
-        assert Card.from_dict(out_dict['revealed_card']) == Card.from_dict(data_dict['revealed_card'])
+    assert out_dict["suggester"] == data_dict["suggester"]
+    assert out_dict["weapon"] == data_dict["weapon"]
+    assert out_dict["room"] == data_dict["room"]
+    assert out_dict["character"] == data_dict["character"]
+    if data_dict["disprover"]:
+        assert out_dict["disprover"] == data_dict["disprover"]
+        assert Card.from_dict(out_dict["revealed_card"]) == Card.from_dict(
+            data_dict["revealed_card"]
+        )
     else:
-        assert out_dict['disprover'] == data_dict['disprover']
-        assert out_dict['revealed_card'] == data_dict['revealed_card']
-
-
+        assert out_dict["disprover"] == data_dict["disprover"]
+        assert out_dict["revealed_card"] == data_dict["revealed_card"]
 
 
 @pytest.mark.parametrize(
     "data_dict, weapon, room, character, disprover, revealed_card",
     [
-        (   
+        (
             {
                 "suggester": "1234",
                 "weapon": Card(CardType.WEAPON.value, WeaponType.KNIFE.value).to_dict(),
                 "room": Card(CardType.ROOM.value, RoomType.BALLROOM.value).to_dict(),
                 "character": Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value).to_dict(),
                 "disprover": None,
-                "revealed_card": None
+                "revealed_card": None,
             },
             Card(CardType.WEAPON.value, WeaponType.KNIFE.value),
             Card(CardType.ROOM.value, RoomType.BALLROOM.value),
             Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value),
             None,
-            None
+            None,
         ),
-        (   
+        (
             {
                 "suggester": "1234",
                 "weapon": Card(CardType.WEAPON.value, WeaponType.KNIFE.value).to_dict(),
                 "room": Card(CardType.ROOM.value, RoomType.BALLROOM.value).to_dict(),
                 "character": Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value).to_dict(),
                 "disprover": "disprover",
-                "revealed_card": Card(CardType.WEAPON.value, WeaponType.KNIFE.value).to_dict()
+                "revealed_card": Card(CardType.WEAPON.value, WeaponType.KNIFE.value).to_dict(),
             },
             Card(CardType.WEAPON.value, WeaponType.KNIFE.value),
             Card(CardType.ROOM.value, RoomType.BALLROOM.value),
             Card(CardType.CHARACTER.value, CharType.MRS_PEACOCK.value),
             "disprover",
-            Card(CardType.WEAPON.value, WeaponType.KNIFE.value)
+            Card(CardType.WEAPON.value, WeaponType.KNIFE.value),
         ),
-    ]
+    ],
 )
 def test_load_suggestion(player, data_dict, weapon, room, character, disprover, revealed_card):
     suggestion = Suggestion(player, weapon, room, character)
@@ -224,7 +223,7 @@ def test_load_suggestion(player, data_dict, weapon, room, character, disprover, 
             "room": Card(CardType.ROOM.value, RoomType.DINING_ROOM.value).to_dict(),
             "character": Card(CardType.CHARACTER.value, CharType.MR_GREEN.value).to_dict(),
             "disprover": None,
-            "revealed_card": None
+            "revealed_card": None,
         },
         {
             "suggester": "1234",
@@ -232,21 +231,23 @@ def test_load_suggestion(player, data_dict, weapon, room, character, disprover, 
             "room": Card(CardType.ROOM.value, RoomType.DINING_ROOM.value).to_dict(),
             "character": Card(CardType.CHARACTER.value, CharType.MR_GREEN.value).to_dict(),
             "disprover": "5678",
-            "revealed_card": Card(CardType.CHARACTER.value, CharType.MR_GREEN.value).to_dict()
-        }
-    ]
+            "revealed_card": Card(CardType.CHARACTER.value, CharType.MR_GREEN.value).to_dict(),
+        },
+    ],
 )
 def test_load_save_suggestion(data_dict):
     out_dict = Suggestion.from_dict(data_dict).to_dict()
     assert len(out_dict) == len(data_dict)
     assert set(out_dict.keys()) == set(data_dict.keys())
-    assert out_dict['suggester'] == data_dict['suggester']
-    assert Card.from_dict(out_dict['weapon']) == Card.from_dict(data_dict['weapon'])
-    assert Card.from_dict(out_dict['room']) == Card.from_dict(data_dict['room'])
-    assert Card.from_dict(out_dict['character']) == Card.from_dict(data_dict['character'])
-    if data_dict['disprover']:
-        assert out_dict['disprover'] == data_dict['disprover']
-        assert Card.from_dict(out_dict['revealed_card']) == Card.from_dict(data_dict['revealed_card'])
+    assert out_dict["suggester"] == data_dict["suggester"]
+    assert Card.from_dict(out_dict["weapon"]) == Card.from_dict(data_dict["weapon"])
+    assert Card.from_dict(out_dict["room"]) == Card.from_dict(data_dict["room"])
+    assert Card.from_dict(out_dict["character"]) == Card.from_dict(data_dict["character"])
+    if data_dict["disprover"]:
+        assert out_dict["disprover"] == data_dict["disprover"]
+        assert Card.from_dict(out_dict["revealed_card"]) == Card.from_dict(
+            data_dict["revealed_card"]
+        )
     else:
-        assert out_dict['disprover'] == data_dict['disprover']
-        assert out_dict['revealed_card'] == data_dict['revealed_card']
+        assert out_dict["disprover"] == data_dict["disprover"]
+        assert out_dict["revealed_card"] == data_dict["revealed_card"]

@@ -1,7 +1,7 @@
-""""
+""" "
 Private information filter
 
-Every game state sent to client goes throug player_view() first. A viewer sees only their own 
+Every game state sent to client goes throug player_view() first. A viewer sees only their own
 hand. Other players hanf are replaced with a count, and the Case File stays hidden until the
 game is finished
 """
@@ -10,6 +10,7 @@ import copy
 
 CASE_FILE_KEYS = ("case_file", "caseFile")
 FINISHED = "finished"
+
 
 def player_view(state, viewer_uid):
     # Return a copy of state that is safe to send to viewer_uid
