@@ -293,7 +293,7 @@ class Location:
         return (self.location_type.value, self.name.value)
 
     def __eq__(self, obj):
-        if not isinstance(object, Location):
+        if not isinstance(obj, Location):
             raise NotImplemented
         return self._identity() == obj._identity()
 
@@ -349,7 +349,7 @@ class Character:
         CharType.PROFESSOR_PLUM: HallType.STUDY_LIBRARY,
         CharType.MRS_PEACOCK: HallType.LIBRARY_CONSERVATORY,
         CharType.MR_GREEN: HallType.CONSERVATORY_BALLROOM,
-        CharType.MRS_WHITE: HallType.BALLROOM_KITCHEN.value
+        CharType.MRS_WHITE: HallType.BALLROOM_KITCHEN
     }
 
     def __init__(self, character: str):
