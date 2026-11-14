@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
 
 class GameStatus(Enum):
@@ -169,12 +169,12 @@ class CaseFile:
 
     def __eq__(self, obj) -> bool:
         if not isinstance(obj, CaseFile):
-            raise NotImplemented
+            raise NotImplementedError
         return self._identity() == obj._identity()
 
 
 class Location:
-    secret_passages = {
+    secret_passages : ClassVar[dict[RoomType, RoomType | None]] = {
         RoomType.STUDY: RoomType.KITCHEN,
         RoomType.KITCHEN: RoomType.STUDY,
         RoomType.LOUNGE: RoomType.CONSERVATORY,
@@ -186,7 +186,7 @@ class Location:
         RoomType.BALLROOM: None
     }
 
-    neighbors = {
+    neighbors : ClassVar[dict[RoomType | HallType, list[HallType | RoomType]]] = {
         RoomType.STUDY: [
             HallType.STUDY_HALL, 
             HallType.STUDY_LIBRARY
@@ -303,7 +303,7 @@ class Location:
                 case LocationType.HALLWAY:
                     neighbors.append(Location(LocationType.ROOM.value, location.value))
                 case _:
-                    raise ValueError(f"Invalid {location_type=}")
+                    raise ValueError(f"Invalid {self.location_type=}")
         
         secret_passage = self.get_secret_passage()
         neighbors = neighbors + [secret_passage] if secret_passage is not None else neighbors
@@ -315,7 +315,7 @@ class Location:
 
     def __eq__(self, obj):
         if not isinstance(obj, Location):
-            raise NotImplemented
+            raise NotImplementedError
         return self._identity() == obj._identity()
 
     def __hash__(self) -> int:
@@ -328,7 +328,7 @@ class Location:
         }
 
     def get_secret_passage(self) -> Location | None:
-        if isinstance(self.name, RoomType) and self.secret_passages[self.name]:
+        if isinstance(self.name, RoomType) and self.secret_passages[self.name] is not None:
             return Location(LocationType.ROOM.value, self.secret_passages[self.name].value)
         else:
             return None
@@ -364,7 +364,7 @@ class Board:
 
 
 class Character:
-    starting_location = {
+    starting_location : ClassVar[dict[CharType, HallType]] = {
         CharType.MISS_SCARLET: HallType.HALL_LOUNGE,
         CharType.COLONEL_MUSTARD: HallType.LOUNGE_DINING_ROOM,
         CharType.PROFESSOR_PLUM: HallType.STUDY_LIBRARY,
@@ -534,7 +534,7 @@ class Game:
         self.disprove_turn_index = 0
         self.current_suggestion = None
         self.suggestion_round = False
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
 
     @classmethod
     def from_dict(cls, data_dict):

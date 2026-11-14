@@ -6,7 +6,6 @@ import pytest
 
 from game.rules_engine import RulesEngine
 
-
 NOT_IMPLEMENTED = "Not Implemented"
 
 

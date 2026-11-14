@@ -1,16 +1,7 @@
-from datetime import datetime, timezone
 import pytest
 
+from game.game import Card, CardType, Character, CharType, Player, RoomType, WeaponType
 
-from game.game import (
-    Card, 
-    CardType,
-    CharType,
-    Character, 
-    Player, 
-    RoomType, 
-    WeaponType
-)
 
 @pytest.mark.parametrize(
     "data_dict",
@@ -173,8 +164,8 @@ def test_save_player(data_dict):
     assert out_dict["player_id"] == data_dict["player_id"]
     assert out_dict["display_name"] == data_dict["display_name"]
 
-    out_hand = set([Card.from_dict(card) for card in out_dict["hand"]])
-    hand = set([Card.from_dict(card) for card in data_dict["hand"]])
+    out_hand = {Card.from_dict(card) for card in out_dict["hand"]}
+    hand = {Card.from_dict(card) for card in data_dict["hand"]}
 
     assert out_hand == hand
     assert out_dict["is_eliminated"] == data_dict["is_eliminated"]
@@ -252,8 +243,8 @@ def test_load_save_player(data_dict):
     assert out_dict["player_id"] == data_dict["player_id"]
     assert out_dict["display_name"] == data_dict["display_name"]
 
-    out_hand = set([Card.from_dict(card) for card in out_dict["hand"]])
-    hand = set([Card.from_dict(card) for card in data_dict["hand"]])
+    out_hand = {Card.from_dict(card) for card in out_dict["hand"]}
+    hand = {Card.from_dict(card) for card in data_dict["hand"]}
 
     assert out_hand == hand
     assert out_dict["is_eliminated"] == data_dict["is_eliminated"]

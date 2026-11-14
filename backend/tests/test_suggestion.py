@@ -1,14 +1,6 @@
 import pytest
 
-from game.game import (
-    Card,
-    CardType,
-    CharType,
-    Player,
-    Suggestion,
-    WeaponType,
-    RoomType
-)
+from game.game import Card, CardType, CharType, Player, RoomType, Suggestion, WeaponType
 
 
 @pytest.fixture

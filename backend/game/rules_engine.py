@@ -38,8 +38,16 @@ Accusations:
 
 import logging
 
-from game.game import CardType, Game, GameStatus, LocationType, Player, Location, Card, RoomType, Suggestion
-
+from game.game import (
+    Card,
+    CardType,
+    Game,
+    GameStatus,
+    Location,
+    LocationType,
+    Player,
+    Suggestion,
+)
 
 logger = logging.getLogger(__name__)
 

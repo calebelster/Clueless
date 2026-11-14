@@ -1,14 +1,6 @@
 import pytest
 
-from game.game import (
-    CharType,
-    Character,
-    HallType, 
-    Location, 
-    Board, 
-    LocationType,
-    RoomType
-)
+from game.game import Board, Character, CharType, HallType, Location, LocationType, RoomType
 
 
 # TODO

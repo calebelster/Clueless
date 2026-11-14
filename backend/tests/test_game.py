@@ -1,17 +1,18 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 import pytest
 
 from game.game import (
-    Card, 
+    Card,
     CardType,
+    CaseFile,
     CharType,
-    CaseFile, 
-    Location,
     Game,
-    GameStatus, 
-    Player, 
+    GameStatus,
+    Location,
+    Player,
     RoomType,
-    WeaponType
+    WeaponType,
 )
 
 
@@ -44,7 +45,7 @@ def test_save_game_state():
                 "disprove_turn_index": 0,
                 "current_suggestion": None,
                 "suggestion_round": False,
-                "created_at": datetime.now(timezone.utc)
+                "created_at": datetime.now(UTC)
             }
 
         )
@@ -68,7 +69,7 @@ def test_load_save_game_state(data_dict):
             assert test_player_dict["character"]["moved_by_suggestion"] == player_dict["character"]["moved_by_suggestion"]
         else:
             assert test_player_dict["character"] == player_dict["character"]
-        assert set([Card.from_dict(card) for card in test_player_dict["hand"]]) == set([Card.from_dict(card) for card in player_dict["hand"]])
+        assert {Card.from_dict(card) for card in test_player_dict["hand"]} == {Card.from_dict(card) for card in player_dict["hand"]}
         assert test_player_dict["is_eliminated"] == player_dict["is_eliminated"]
         assert test_player_dict["is_connected"] == player_dict["is_connected"]
     

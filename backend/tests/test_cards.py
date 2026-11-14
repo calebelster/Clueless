@@ -1,13 +1,6 @@
 import pytest
 
-
-from game.game import (
-    Card,
-    CardType,
-    CaseFile,
-    DECK,
-    CharType, WeaponType, RoomType
-)
+from game.game import DECK, Card, CardType, CaseFile, CharType, RoomType, WeaponType
 
 
 def test_all_cards():
@@ -268,7 +261,7 @@ def test_save_case_file(case_file, data_dict):
     out_dict = case_file.to_dict()
     assert set(data_dict.keys()) == set(out_dict.keys())
     for category, card_dict in data_dict.items():
-        assert set(data_dict[category].keys()) == set(card_dict.keys())
+        assert set(card_dict.keys()) == set(card_dict.keys())
         for field_name, field in card_dict.items():
             assert out_dict[category][field_name] == field
 
@@ -296,7 +289,7 @@ def test_load_save_case_file(data_dict):
     out_dict = CaseFile.from_dict(data_dict).to_dict()
     assert set(data_dict.keys()) == set(out_dict.keys())
     for category, card_dict in data_dict.items():
-        assert set(data_dict[category].keys()) == set(card_dict.keys())
+        assert set(card_dict.keys()) == set(card_dict.keys())
         for field_name, field in card_dict.items():
             assert out_dict[category][field_name] == field
 
