@@ -15,18 +15,10 @@ from game.game import (
 )
 
 
-@pytest.mark.parametrize(
-    "",
-    []
-)
 def test_load_game_state():
     pass
 
 
-@pytest.mark.parametrize(
-    "",
-    []
-)
 def test_save_game_state():
     pass
 

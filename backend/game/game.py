@@ -380,16 +380,23 @@ class Character:
             self.starting_location[self.name].value
         )
         self.moved_by_suggestion = False
+        self.moved_this_turn = False
+        self.suggested_in_curr_loc = False
 
     @classmethod
     def from_dict(cls, data_dict) -> Character:
         character = Character(data_dict["name"])
         character.location = Location.from_dict(data_dict["location"])
         character.moved_by_suggestion = data_dict["moved_by_suggestion"]
-        return character    
+        character.moved_this_turn = data_dict["moved_this_turn"]
+        character.suggested_in_curr_loc = data_dict["suggested_in_curr_loc"]
+        return character
 
-    def move_to(self, location: Location) -> None:
+    def move_to(self, location: Location, suggest: bool=False) -> None:
         self.location = location
+        self.moved_by_suggestion = suggest
+        self.moved_this_turn = not suggest
+        self.suggested_in_curr_loc = False
 
     def get_location(self) -> Location:
         return self.location
@@ -398,7 +405,9 @@ class Character:
         return {
             "name": self.name.value,
             "location": self.location.to_dict(),
-            "moved_by_suggestion": self.moved_by_suggestion
+            "moved_by_suggestion": self.moved_by_suggestion,
+            "moved_this_turn": self.moved_this_turn,
+            "suggested_in_curr_loc": self.suggested_in_curr_loc
         }
 
 
@@ -547,20 +556,18 @@ class Game:
 
         return game
 
-    def get_current_player(self) -> Player | None:
-        if self.status != GameStatus.STARTED:
-            return None
+    def get_current_player(self) -> Player:
         if self.suggestion_round:
             return self.players[self.turn_order[self.disprove_turn_index]]
         else:
             return self.players[self.turn_order[self.current_turn_index]]
 
-    def advance_turn(self):
+    def advance_turn(self) -> Player | None:
         self.current_suggestion = None
         curr_player = self.get_current_player()
         if curr_player is not None and curr_player.character is not None:
             curr_player.character.moved_by_suggestion = False
-        # moved_this_turn -> False (Design doc page 9)
+            curr_player.character.moved_this_turn =  False
         
         # Advance turn count until we hit someone who is not eliminated or disconnected
         self.current_turn_index = (self.current_turn_index + 1) % len(self.players)
@@ -592,7 +599,7 @@ class Game:
         self.current_suggestion = suggestion
         self.disprove_turn_index = (self.current_turn_index + 1) % len(self.players)
 
-    def stop_suggest_round(self, suggestion: Suggestion):
+    def stop_suggest_round(self):
         self.suggestion_round = False
         self.current_suggestion = None
         self.disprove_turn_index = 0

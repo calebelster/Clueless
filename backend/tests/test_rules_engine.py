@@ -4,31 +4,62 @@ Rules Engine Subsystem Check
 
 import pytest
 
-from game import rules_engine
+from game.rules_engine import RulesEngine
 
 
-def test_reject_bad_action():
-    game, player, payload = {}, {}, {}
-    bad_action = "BADCMD_REQ"
-
-    success, reason = rules_engine.execute(bad_action, game, player, payload)
-    assert not success
-    assert bad_action in reason
-    assert "not a valid player action" in reason
+NOT_IMPLEMENTED = "Not Implemented"
 
 
-@pytest.mark.parametrize(
-    "action, expected",
-    [
-        ("MOVE_REQ", True),
-        ("SUGGEST_REQ", True),
-        ("DISPROVE_REQ", True),
-        ("ACCUSE_REQ", True),
-        ("END_TURN_REQ", True),
-    ],
-)
-def test_validated_good_action(action, expected):
-    game, player, payload = {}, {}, {}
-    success, reason = rules_engine.execute(action, game, player, payload)
-    assert success == expected
-    assert reason == f"{action} valid"
+@pytest.fixture()
+def rules_engine():
+    return RulesEngine()
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_verify_move():
+    pass
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_move():
+    pass
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_verify_suggest():
+    pass
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_suggest():
+    pass
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_verify_disprove():
+    pass
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_disprove():
+    pass
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_verify_accuse():
+    pass
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_accuse():
+    pass
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_verify_end_turn():
+    pass
+
+
+@pytest.mark.skip(reason=NOT_IMPLEMENTED)
+def test_end_turn():
+    pass

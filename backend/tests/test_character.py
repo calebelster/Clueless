@@ -75,7 +75,7 @@ def test_move_to_room(room_name):
 
 
 @pytest.mark.parametrize(
-    "data_dict, character, location, moved",
+    "data_dict, character, location, moved_by_suggestion, moved_this_turn, suggested_in_curr_loc",
     [
         (
             {
@@ -84,10 +84,14 @@ def test_move_to_room(room_name):
                     "location_type": LocationType.HALLWAY.value,
                     "name": Character.starting_location[CharType.MISS_SCARLET].value
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
             },
             Character(CharType.MISS_SCARLET.value),
             Location(LocationType.HALLWAY.value, Character.starting_location[CharType.MISS_SCARLET].value),
+            False,
+            False,
             False
         ),
         (
@@ -97,11 +101,15 @@ def test_move_to_room(room_name):
                     "location_type": LocationType.HALLWAY.value,
                     "name": HallType.STUDY_HALL.value
                 },
-                "moved_by_suggestion": True
+                "moved_by_suggestion": True,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
             },
             Character(CharType.COLONEL_MUSTARD.value),
             Location(LocationType.HALLWAY.value, HallType.STUDY_HALL.value),
-            True
+            True,
+            False,
+            False
         ),  
         (
             {
@@ -110,11 +118,15 @@ def test_move_to_room(room_name):
                     "location_type": LocationType.ROOM.value,
                     "name": RoomType.DINING_ROOM.value,
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": True,
+                "suggested_in_curr_loc": True
             },
             Character(CharType.COLONEL_MUSTARD.value),
             Location(LocationType.ROOM.value, RoomType.DINING_ROOM.value),
-            False
+            False,
+            True,
+            True
         ),
         (
             {
@@ -123,20 +135,26 @@ def test_move_to_room(room_name):
                     "location_type": LocationType.HALLWAY.value,
                     "name": Character.starting_location[CharType.MR_GREEN].value,
                 },
-                "moved_by_suggestion": True
+                "moved_by_suggestion": True,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": True
             },
             Character(CharType.MR_GREEN.value),
             Location(
                 LocationType.HALLWAY.value,
                 Character.starting_location[CharType.MR_GREEN].value
             ),
+            True,
+            False,
             True
         ),
     ]
 )
-def test_load_character(data_dict, character, location, moved):
+def test_load_character(data_dict, character, location, moved_by_suggestion, moved_this_turn, suggested_in_curr_loc):
     character.location = location
-    character.moved_by_suggestion = moved
+    character.moved_by_suggestion = moved_by_suggestion
+    character.moved_this_turn = moved_this_turn
+    character.suggested_in_curr_loc = suggested_in_curr_loc
 
     test_character = Character.from_dict(data_dict)
     
@@ -155,7 +173,9 @@ def test_load_character(data_dict, character, location, moved):
                     "location_type": LocationType.HALLWAY.value,
                     "name": Character.starting_location[CharType.MISS_SCARLET].value
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
             }
         ),
         (
@@ -166,7 +186,9 @@ def test_load_character(data_dict, character, location, moved):
                     "location_type": LocationType.HALLWAY.value,
                     "name": Character.starting_location[CharType.COLONEL_MUSTARD].value
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
             }
         ),
         (
@@ -177,7 +199,9 @@ def test_load_character(data_dict, character, location, moved):
                     "location_type": LocationType.HALLWAY.value,
                     "name": Character.starting_location[CharType.PROFESSOR_PLUM].value
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
             }
         ),
         (
@@ -188,7 +212,9 @@ def test_load_character(data_dict, character, location, moved):
                     "location_type": LocationType.HALLWAY.value,
                     "name": Character.starting_location[CharType.MRS_PEACOCK].value
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
             }
         ),
         (
@@ -199,7 +225,9 @@ def test_load_character(data_dict, character, location, moved):
                     "location_type": LocationType.HALLWAY.value,
                     "name": Character.starting_location[CharType.MR_GREEN].value
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
             }
         ),
         (
@@ -210,7 +238,9 @@ def test_load_character(data_dict, character, location, moved):
                     "location_type": LocationType.HALLWAY.value,
                     "name": Character.starting_location[CharType.MRS_WHITE].value
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
             }
         ),
     ]
@@ -235,7 +265,9 @@ def test_save_character(character, data_dict):
                     "location_type": LocationType.HALLWAY.value,
                     "name": Character.starting_location[CharType.MISS_SCARLET].value,
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": True,
+                "suggested_in_curr_loc": True
         },
         {
                 "name": CharType.COLONEL_MUSTARD.value,
@@ -243,7 +275,9 @@ def test_save_character(character, data_dict):
                     "location_type": LocationType.HALLWAY.value,
                     "name": HallType.STUDY_HALL.value,
                 },
-                "moved_by_suggestion": True
+                "moved_by_suggestion": True,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": True
         },
         {
                 "name": CharType.MRS_WHITE.value,
@@ -251,7 +285,9 @@ def test_save_character(character, data_dict):
                     "location_type": LocationType.ROOM.value,
                     "name": RoomType.BILLIARD_ROOM.value
                 },
-                "moved_by_suggestion": False
+                "moved_by_suggestion": False,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
         },
         {
                 "name": CharType.PROFESSOR_PLUM.value,
@@ -259,7 +295,9 @@ def test_save_character(character, data_dict):
                     "location_type": LocationType.HALLWAY.value,
                     "name": HallType.CONSERVATORY_BALLROOM.value
                 },
-                "moved_by_suggestion": True
+                "moved_by_suggestion": True,
+                "moved_this_turn": False,
+                "suggested_in_curr_loc": False
         },
     ]
 )
