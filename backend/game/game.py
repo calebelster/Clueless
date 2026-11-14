@@ -107,13 +107,19 @@ class Card:
         return self._identity() == obj._identity()
 
     def __hash__(self):
-        return hash(self._identity)
+        return hash(self._identity())
 
     def to_dict(self) -> dict[str, str]:
         return {
             "card_type": self.card_type.value,
             "name": self.name.value
         }
+
+    def __str__(self) -> str:
+        return f"Card({self.card_type.value}, {self.name.value})"
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
 
 class CaseFile:
@@ -409,6 +415,9 @@ class Player:
         player.is_connected = data_dict["is_connected"]
 
         return player
+
+    def set_character(self, character: Character):
+        self.character = character
 
     def add_card(self, card: Card) -> None:
         self.hand.append(card)
