@@ -470,6 +470,8 @@ class Suggestion:
             card == self.character
 
     def record_disproval(self, player: Player, card: Card):
+        if self.weapon != card and self.room != card and self.character != card:
+            raise ValueError(f"{Card=} is not part of the suggestion")
         self.disprover = player.player_id
         self.revealed_card = card
         
