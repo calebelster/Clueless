@@ -157,6 +157,21 @@ class CaseFile:
             "character": self.character.to_dict()
         }
 
+    def _identity(self):
+        return (
+            self.room._identity(), 
+            self.weapon._identity(), 
+            self.character._identity()
+        )
+
+    def __hash__(self) -> int:
+        return hash(self._identity())
+
+    def __eq__(self, obj) -> bool:
+        if not isinstance(obj, CaseFile):
+            raise NotImplemented
+        return self._identity() == obj._identity()
+
 
 class Location:
     secret_passages = {
@@ -518,15 +533,15 @@ class Game:
             data_dict["game_id"], 
             Player(data_dict["host"], "default")
         )
-        game.status = data_dict["status"]
+        game.status = GameStatus(data_dict["status"])
         game.players = {
             player_id: Player.from_dict(player_dict) for player_id, player_dict in data_dict["players"].items()
-        },
-        game.case_file = CaseFile.from_dict(data_dict["case_file"]) if data_dict["case_file"] is not None else None,
-        game.turn_order = data_dict["turn_order"],
+        }
+        game.case_file = CaseFile.from_dict(data_dict["case_file"]) if data_dict["case_file"] is not None else None
+        game.turn_order = data_dict["turn_order"]
         game.current_turn_index = data_dict["current_turn_index"]
         game.disprove_turn_index = data_dict["disprove_turn_index"]
-        game.current_suggestion = Suggestion.from_dict(data_dict["current_suggestion"]) if data_dict["current_suggestion"] is not None else None,
+        game.current_suggestion = Suggestion.from_dict(data_dict["current_suggestion"]) if data_dict["current_suggestion"] is not None else None
         game.suggestion_round = data_dict["suggestion_round"]
         game.created_at = data_dict["created_at"]
 
