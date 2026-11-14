@@ -19,12 +19,11 @@ import pytest
 
 from game import auth, db
 
-
 """ Stand-in for Firebase's token check.
    " good " is treated as a valid token for player u1. Anything else is
     rejected the same way Firebase rejects a bad token: by raising ValueError.
 """
-def fake_verify(token):
+def fake_verify(token, **kwargs):
     if token == "good":
         return {"uid": "u1"}
     raise ValueError("bad token")
