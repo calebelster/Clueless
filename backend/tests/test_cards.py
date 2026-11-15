@@ -1,6 +1,6 @@
 import pytest
 
-from game.game import DECK, Card, CardType, CaseFile, CharType, RoomType, WeaponType
+from game.game_logic import DECK, Card, CardType, CaseFile, CharType, RoomType, WeaponType
 
 
 def test_all_cards():

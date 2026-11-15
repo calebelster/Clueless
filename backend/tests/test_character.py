@@ -1,6 +1,6 @@
 import pytest
 
-from game.game import Character, CharType, HallType, Location, LocationType, RoomType
+from game.game_logic import Character, CharType, HallType, Location, LocationType, RoomType
 
 
 @pytest.mark.parametrize(

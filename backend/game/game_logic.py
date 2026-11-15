@@ -37,7 +37,7 @@ class RoomType(Enum):
 
 
 class CharType(Enum):
-    MISS_SCARLET = "miss scarlett"
+    MISS_SCARLET = "miss scarlet"
     COLONEL_MUSTARD = "colonel mustard"
     PROFESSOR_PLUM = "professor plum"
     MRS_PEACOCK = "mrs. peacock"
@@ -534,7 +534,7 @@ class Game:
             return next_player
 
     def add_player(self, player: Player):
-        if self.status != GameStatus.LOBBY or len(self.players) > self.MAX_PLAYERS:
+        if self.status != GameStatus.LOBBY or len(self.players) >= self.MAX_PLAYERS:
             return False
         if player.player_id not in self.players:
             self.players[player.player_id] = player

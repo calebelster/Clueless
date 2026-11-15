@@ -38,7 +38,7 @@ Accusations:
 
 import logging
 
-from game.game import (
+from game.game_logic import (
     Card,
     CardType,
     Game,

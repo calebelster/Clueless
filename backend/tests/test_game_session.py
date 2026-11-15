@@ -9,6 +9,8 @@ Run from backend/:
 import pytest
 
 from game import db, game_session
+from game.game_logic import GameStatus, CharType, Character, Game
+from game.game_session import ERROR_CODE
 
 
 @pytest.fixture(autouse=True)
@@ -41,7 +43,7 @@ def test_full_game(monkeypatch):
 
     state_message, _notification = game_session.dispatch(_msg("CREATE_GAME_REQ"))
     game_id = state_message["payload"]["gameId"]
-    assert db.load_game(game_id)["hostId"] == "p1"
+    assert db.load_game(game_id)["host"] == "p1"
     assert db.load_player("p1")["gameId"] == game_id
 
     state_message, notification = game_session.dispatch(
@@ -61,37 +63,43 @@ def test_full_game(monkeypatch):
     assert db.load_player("p2")["gameId"] == game_id
 
     state_message, _notification = game_session.dispatch(
-        _msg("SELECT_CHAR_REQ", "p2", "Quinton", characterId="Miss Scarlet")
+        _msg("SELECT_CHAR_REQ", "p2", "Quinton", characterId=CharType.MISS_SCARLET.value)
     )
-    assert state_message["payload"]["players"]["p2"]["characterId"] == "Miss Scarlet"
-    game_session.dispatch(_msg("SELECT_CHAR_REQ", "p3", "Caleb", characterId="Mrs. White"))
+
+    print(f'{state_message=}')
+    assert state_message["payload"]["players"]["p2"]["character"]["name"] == CharType.MISS_SCARLET.value
+    game_session.dispatch(_msg("SELECT_CHAR_REQ", "p3", "Caleb", characterId=CharType.MRS_WHITE.value))
     game_session.dispatch(_msg("JOIN_GAME_REQ", "p4", "Justin", gameId=game_id))
-    game_session.dispatch(_msg("SELECT_CHAR_REQ", "p4", "Justin", characterId="Colonel Mustard"))
+    game_session.dispatch(_msg("SELECT_CHAR_REQ", "p4", "Justin", characterId=CharType.COLONEL_MUSTARD.value))
 
     state_message, notification = game_session.dispatch(
         _msg("START_GAME_REQ", "p2", "Quinton", gameId=game_id)
     )
     assert notification is None
-    assert state_message["payload"]["errorCode"] == "NOT_HOST"
+    assert state_message["payload"]["errorCode"] == ERROR_CODE.NOT_HOST
 
     state_message, _notification = game_session.dispatch(
         _msg("START_GAME_REQ", "p3", "Caleb", gameId=game_id)
     )
-    assert state_message["payload"]["status"] == "started"
+    assert state_message["payload"]["status"] == GameStatus.STARTED.value
+    
     saved = db.load_game(game_id)
-    assert saved["turnOrder"][0] == "p2"
-    assert saved["stubState"]["currentTurnPlayer"] == "p2"
-    assert saved["stubState"]["boardLocations"]["Miss Scarlet"] == "hall-lounge"
+    game = Game.from_dict(saved)
+
+    assert game.turn_order[0] == 'p2'
+    assert game.turn_order[game.current_turn_index] == 'p2'
+    assert game.players['p2'].character is not None
+    assert game.players['p2'].character.name == CharType.MISS_SCARLET
+    assert game.players['p2'].character.location.name.value == Character.starting_location[CharType.MISS_SCARLET].value
+
     dealt = []
-    for info in saved["players"].values():
-        dealt.extend(info["hand"])
-    dealt_names = set()
-    for card in dealt:
-        dealt_names.add((card["category"], card["name"]))
-    case_file = saved["caseFile"]
-    assert ("suspect", case_file["suspect"]) not in dealt_names
-    assert ("weapon", case_file["weapon"]) not in dealt_names
-    assert ("room", case_file["room"]) not in dealt_names
+    for player in game.players.values():
+        dealt.extend(player.hand)
+
+    assert game.case_file is not None
+    assert game.case_file.weapon not in dealt
+    assert game.case_file.room not in dealt
+    assert game.case_file.character not in dealt
     assert len(dealt) == 18
 
     state_message, notification = game_session.dispatch(
@@ -112,7 +120,7 @@ def test_reject_not_exist_game():
     )
     assert notification is None
     assert state_message["type"] == "ACTION_REJECTED"
-    assert state_message["payload"]["errorCode"] == "GAME_NOT_FOUND"
+    assert state_message["payload"]["errorCode"] == ERROR_CODE.GAME_NOT_FOUND
     assert "not found" in state_message["payload"]["reason"]
 
 
@@ -158,5 +166,5 @@ def test_reject_start_without_enough_players():
 
     state_message, notification = game_session.dispatch(_msg("START_GAME_REQ", gameId=game_id))
     assert notification is None
-    assert state_message["payload"]["errorCode"] == "PLAYER_COUNT"
-    assert db.load_game(game_id)["status"] == "lobby"
+    assert state_message["payload"]["errorCode"] == ERROR_CODE.PLAYER_COUNT
+    assert db.load_game(game_id)["status"] == GameStatus.LOBBY.value
