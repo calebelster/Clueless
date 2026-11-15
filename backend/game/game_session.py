@@ -81,7 +81,6 @@ RULES_MESSAGES = (
 )
 
 
-
 class ERROR_CODE:
     GAME_NOT_FOUND = "GAME_NOT_FOUND"
     GAME_FULL = "GAME_FULL"
@@ -96,8 +95,10 @@ class ERROR_CODE:
     MISSING_CHARACTER = "MISSING_CHARACTER"
     MISS_SCARLET_REQUIRED = "MISS_SCARLET_REQUIRED"
 
+
 class ACTION_STATUS:
     ACTION_REJECTED = "ACTION_REJECTED"
+
 
 UNKNOWN_GAME_ID = "unknown"
 
@@ -227,7 +228,9 @@ def _saved(game_id, game_state, event_type, description):
         "payload": {
             "gameId": game_id,
             "status": game_state.status.value,
-            "players": {player_id: player.to_dict() for player_id, player in game_state.players.items()},
+            "players": {
+                player_id: player.to_dict() for player_id, player in game_state.players.items()
+            },
             "currentTurnPlayer": game_state.turn_order[current_turn_index],
             # "boardLocations": stub_state.get("boardLocations") or {}, TODO - What is this supposed to be?
             # "activeStatus": stub_state.get("activeStatus") or {}, TODO - what is active status supposed to be?
@@ -341,7 +344,7 @@ def join_game(game_id, player_id, display_name):
     # A game can only have at most 6 players
     if player_id not in game_state.players and len(game_state.players) >= MAX_PLAYERS:
         return _rejected(ERROR_CODE.GAME_FULL, "Game has 6 players already"), None
-    
+
     # Player already in game
     if player_id in game_state.players:
         # Do nothing? Throw Error
@@ -373,17 +376,25 @@ def select_character(player_id: str, character_id: str):
 
     # player_id is not in the game
     if player_id not in game_state.players:
-        return _rejected(ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"), None
+        return _rejected(
+            ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"
+        ), None
     # character is not one of the six available suspects
-    
+
     try:
         character = Character(character_id.lower())
     except ValueError:
-        return _rejected(ERROR_CODE.CHARACTER_UNKNOWN, "Character is not one of the six suspects"), None
-    
+        return _rejected(
+            ERROR_CODE.CHARACTER_UNKNOWN, "Character is not one of the six suspects"
+        ), None
+
     # Check if character is already chosen
     for curr_player_id, player in game_state.players.items():
-        if curr_player_id != player_id and player.character is not None and player.character.name == character.name:
+        if (
+            curr_player_id != player_id
+            and player.character is not None
+            and player.character.name == character.name
+        ):
             return _rejected(ERROR_CODE.CHARACTER_TAKEN, f"{character_id} is already taken"), None
 
     game_state.players[player_id].set_character(character)
@@ -407,9 +418,13 @@ def start_game(game_id, player_id):
             game_id = UNKNOWN_GAME_ID
         return _rejected(ERROR_CODE.GAME_NOT_FOUND, f"game {game_id} not found"), None
     if player_id not in game_state.players:
-        return _rejected(ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"), None
+        return _rejected(
+            ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"
+        ), None
     if player_id != game_state.host:
-        return _rejected(ERROR_CODE.NOT_HOST, "Only the player who created the game can start it"), None
+        return _rejected(
+            ERROR_CODE.NOT_HOST, "Only the player who created the game can start it"
+        ), None
     if game_state.status == GameStatus.STARTED:
         return _rejected(ERROR_CODE.GAME_ALREADY_STARTED, "Game has already started"), None
     if game_state.status == GameStatus.ENDED:
@@ -422,7 +437,9 @@ def start_game(game_id, player_id):
 
     for player in game_state.players.values():
         if player.character is None:
-            return _rejected(ERROR_CODE.MISSING_CHARACTER, "Every player must select a character"), None
+            return _rejected(
+                ERROR_CODE.MISSING_CHARACTER, "Every player must select a character"
+            ), None
         if player.character.name == CharType.MISS_SCARLET:
             has_scarlet = True
 
@@ -451,7 +468,9 @@ def handle_action(player_id, message):
             game_id = UNKNOWN_GAME_ID
         return _rejected(ERROR_CODE.GAME_NOT_FOUND, f"game {game_id} not found"), None
     if player_id not in game_state.players:
-        return _rejected(ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"), None
+        return _rejected(
+            ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"
+        ), None
 
     payload = message.get("payload")
     if not isinstance(payload, dict):

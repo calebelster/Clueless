@@ -66,11 +66,18 @@ def test_full_game(monkeypatch):
         _msg("SELECT_CHAR_REQ", "p2", "Quinton", characterId=CharType.MISS_SCARLET.value)
     )
 
-    print(f'{state_message=}')
-    assert state_message["payload"]["players"]["p2"]["character"]["name"] == CharType.MISS_SCARLET.value
-    game_session.dispatch(_msg("SELECT_CHAR_REQ", "p3", "Caleb", characterId=CharType.MRS_WHITE.value))
+    print(f"{state_message=}")
+    assert (
+        state_message["payload"]["players"]["p2"]["character"]["name"]
+        == CharType.MISS_SCARLET.value
+    )
+    game_session.dispatch(
+        _msg("SELECT_CHAR_REQ", "p3", "Caleb", characterId=CharType.MRS_WHITE.value)
+    )
     game_session.dispatch(_msg("JOIN_GAME_REQ", "p4", "Justin", gameId=game_id))
-    game_session.dispatch(_msg("SELECT_CHAR_REQ", "p4", "Justin", characterId=CharType.COLONEL_MUSTARD.value))
+    game_session.dispatch(
+        _msg("SELECT_CHAR_REQ", "p4", "Justin", characterId=CharType.COLONEL_MUSTARD.value)
+    )
 
     state_message, notification = game_session.dispatch(
         _msg("START_GAME_REQ", "p2", "Quinton", gameId=game_id)
@@ -82,15 +89,18 @@ def test_full_game(monkeypatch):
         _msg("START_GAME_REQ", "p3", "Caleb", gameId=game_id)
     )
     assert state_message["payload"]["status"] == GameStatus.STARTED.value
-    
+
     saved = db.load_game(game_id)
     game = Game.from_dict(saved)
 
-    assert game.turn_order[0] == 'p2'
-    assert game.turn_order[game.current_turn_index] == 'p2'
-    assert game.players['p2'].character is not None
-    assert game.players['p2'].character.name == CharType.MISS_SCARLET
-    assert game.players['p2'].character.location.name.value == Character.starting_location[CharType.MISS_SCARLET].value
+    assert game.turn_order[0] == "p2"
+    assert game.turn_order[game.current_turn_index] == "p2"
+    assert game.players["p2"].character is not None
+    assert game.players["p2"].character.name == CharType.MISS_SCARLET
+    assert (
+        game.players["p2"].character.location.name.value
+        == Character.starting_location[CharType.MISS_SCARLET].value
+    )
 
     dealt = []
     for player in game.players.values():
