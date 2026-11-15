@@ -9,7 +9,7 @@ Run from backend/:
 import pytest
 
 from game import db, game_session
-from game.game_logic import GameStatus, CharType, Character, Game
+from game.game_logic import Character, CharType, Game, GameStatus
 from game.game_session import ERROR_CODE
 
 

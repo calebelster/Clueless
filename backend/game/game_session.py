@@ -19,15 +19,21 @@ The actions of the player is forwarded to the rule engine for validation:
 import logging
 import random
 import uuid
-from datetime import UTC, datetime
-from copy import deepcopy
-
-from proto.marshal.marshal import Rule
 
 from game import db
+from game.game_logic import (
+    Card,
+    CardType,
+    CaseFile,
+    Character,
+    CharType,
+    Game,
+    GameStatus,
+    Player,
+    RoomType,
+    WeaponType,
+)
 from game.rules_engine import RulesEngine
-
-from game.game_logic import CharType, CardType, WeaponType, RoomType, Card, Game, Player, CaseFile, Character, GameStatus
 
 logger = logging.getLogger(__name__)
 
@@ -284,7 +290,6 @@ def create_game(host_id, display_name):
     host = Player(host_id, display_name)
     game_state = Game(game_id, host)
 
-    current_time = datetime.now(UTC).isoformat()
     # game_state = {
     #     "status": "lobby",
     #     "hostId": host_id,
@@ -415,7 +420,7 @@ def start_game(game_id, player_id):
 
     has_scarlet = False
 
-    for _, player in game_state.players.items():
+    for player in game_state.players.values():
         if player.character is None:
             return _rejected(ERROR_CODE.MISSING_CHARACTER, "Every player must select a character"), None
         if player.character.name == CharType.MISS_SCARLET:
