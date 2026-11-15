@@ -69,6 +69,10 @@ class Reason:
     DISPROVE_DURING_NOT_SUGGEST = "Player cannot disprove outside of an active suggestion round"
     PASSING_WITH_VALID_DISPROVE = "Player cannot pass while holding a suggested card"
     INVALID_DISPROVE_CARD = "Player cannot disprove with card not in current suggestion"
+    ACCUSE_DURING_SUGGEST = "Player cannot accuse during an active suggestion round"
+    END_TURN_DURING_SUGGEST = "Player cannot end turn during an active suggestion round"
+    INVALID_ACCUSATION_CARDS = "Accusation must contain a weapon, room, and character card"
+    CASE_FILE_MISSING = "Game has no Case File"
 
 
 class RulesEngine:
@@ -279,75 +283,90 @@ class RulesEngine:
     def validate_accuse(
         self, game: Game, player: Player, weapon: Card, room: Card, character: Card
     ) -> tuple[bool, str]:
-        # Generic validation for all actions
         valid, reason = self._validate_generic(game, player)
-
         if not valid:
             return valid, reason
 
-        # If player is eliminated
-        curr_player = game.get_current_player()
+        if game.suggestion_round:
+            return False, Reason.ACCUSE_DURING_SUGGEST
 
+        curr_player = game.get_current_player()
         if curr_player.is_eliminated:
             return False, Reason.PLAYER_ELIMINATED
 
+        if not (
+            isinstance(weapon, Card)
+            and isinstance(room, Card)
+            and isinstance(character, Card)
+            and weapon.card_type == CardType.WEAPON
+            and room.card_type == CardType.ROOM
+            and character.card_type == CardType.CHARACTER
+        ):
+            return False, Reason.INVALID_ACCUSATION_CARDS
+
+        if game.case_file is None:
+            return False, Reason.CASE_FILE_MISSING
+
         return True, Reason.OK
 
-    def perform_accuse(self, game: Game, player: Player, weapon: Card, room: Card, character: Card):
+    def perform_accuse(
+        self, game: Game, player: Player, weapon: Card, room: Card, character: Card
+    ) -> tuple[bool, str]:
         valid, reason = self.validate_accuse(game, player, weapon, room, character)
-
         if not valid:
             return valid, reason
 
         curr_player = game.get_current_player()
-
         assert game.case_file is not None
+
         if game.case_file.accuse(room, weapon, character):
-            # TODO - End game actions
-            pass
-        else:
-            curr_player.eliminate()
-            valid, reason = self.perform_end_turn(game, player)
+            # A correct accusation finishes the game.
+            game.status = GameStatus.ENDED
+            return True, Reason.OK
 
-        # TODO - Messaging / logging to db / save state
+        # The player loses their turns but retains their character and cards,
+        # allowing them to disprove suggestions later.
+        curr_player.eliminate()
 
-        return valid, reason
+        remaining_players = [
+            participant for participant in game.players.values() if not participant.is_eliminated
+        ]
+        if len(remaining_players) <= 1:
+            # One survivor wins, or nobody wins if all players are eliminated.
+            game.status = GameStatus.ENDED
+        elif game.advance_turn() is None:
+            # Nobody is available to take another turn.
+            game.status = GameStatus.ENDED
+
+        # GameSession will own persistence and client notifications after
+        # the object-based RulesEngine has been integrated.
+        return True, Reason.OK
 
     def validate_end_turn(self, game: Game, player: Player) -> tuple[bool, str]:
-        # Generic validation for all actions
         valid, reason = self._validate_generic(game, player)
-
         if not valid:
             return valid, reason
 
-        # If player is eliminated
-        curr_player = game.get_current_player()
+        if game.suggestion_round:
+            return False, Reason.END_TURN_DURING_SUGGEST
 
+        curr_player = game.get_current_player()
         if curr_player.is_eliminated:
             return False, Reason.PLAYER_ELIMINATED
 
         return True, Reason.OK
 
-    def perform_end_turn(self, game: Game, player: Player):
+    def perform_end_turn(self, game: Game, player: Player) -> tuple[bool, str]:
         valid, reason = self.validate_end_turn(game, player)
-
         if not valid:
             return valid, reason
 
-        next_player = game.advance_turn()
-
-        if next_player is None:
-            # All players have been eliminated
-            # TODO - do end of game stuff
+        if game.advance_turn() is None:
             game.status = GameStatus.ENDED
-        else:
-            # We can actually advance to next turn
-            # TODO - do messaging
-            pass
 
-        # TODO - do state saving stuff
-
-        return valid, reason
+        # Persistence and GAME_STATE_UPDATE are owned by GameSession
+        # after integration with this object-based RulesEngine.
+        return True, Reason.OK
 
 
 def _validate_move(game, player, payload):
