@@ -20,8 +20,6 @@ import logging
 import random
 import uuid
 
-from proto.marshal.marshal import Rule
-
 from game import db
 from game.game_logic import (
     Card,
@@ -35,9 +33,9 @@ from game.game_logic import (
     RoomType,
     WeaponType,
     generate_card,
-    generate_location
+    generate_location,
 )
-from game.rules_engine import RulesEngine, Reason
+from game.rules_engine import Reason, RulesEngine
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +87,7 @@ class RequestType:
     END_TURN_REQ = "END_TURN_REQ"
 
 
-RULES_REQUESTS = {    
+RULES_REQUESTS = {
     RequestType.MOVE_REQ,
     RequestType.SUGGEST_REQ,
     RequestType.DISPROVE_REQ,
@@ -503,7 +501,6 @@ def handle_action(player_id, message):
     player = game_state.players[player_id]
     logger.info(f"[GAME] Looked up {game_id} | {player_id} -> forward {msg_type} to Rules Engine")
 
-
     match msg_type:
         case RequestType.MOVE_REQ:
             try:
@@ -518,7 +515,9 @@ def handle_action(player_id, message):
             try:
                 character = Card(CardType.CHARACTER.value, payload.get("suspect"))
                 weapon = Card(CardType.WEAPON.value, payload.get("weapon"))
-                accepted, reason = rules_engine.validate_suggest(game_state, player, character, weapon)
+                accepted, reason = rules_engine.validate_suggest(
+                    game_state, player, character, weapon
+                )
                 if accepted:
                     rules_engine.perform_suggest(game_state, player, character, weapon)
             except ValueError:
@@ -538,13 +537,14 @@ def handle_action(player_id, message):
                 weapon = Card(CardType.WEAPON.value, payload.get("weapon"))
                 room = Card(CardType.ROOM.value, payload.get("room"))
                 character = Card(CardType.CHARACTER.value, payload.get("suspect"))
-                accepted, reason = rules_engine.validate_accuse(game_state, player, weapon, room, character)
+                accepted, reason = rules_engine.validate_accuse(
+                    game_state, player, weapon, room, character
+                )
                 if accepted:
                     rules_engine.perform_accuse(game_state, player, weapon, room, character)
             except ValueError:
                 accepted = False
                 reason = Reason.INVALID_CARD
-            pass
         case RequestType.END_TURN_REQ:
             accepted, reason = rules_engine.validate_end_turn(game_state, player)
             if accepted:

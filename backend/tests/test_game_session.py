@@ -32,7 +32,7 @@ def test_full_game(monkeypatch):
     walks theough the entire game
     Check a player can create, join, select character, switch to second game, and the actions are forwarded to the rule engine
     """
-    seen = {}
+    # seen = {}
 
     # def fake_rules(action, game, player, payload):
     #     seen["action"] = action

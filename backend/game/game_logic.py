@@ -586,6 +586,7 @@ def generate_location(location_str: str | None) -> Location:
     else:
         raise ValueError("Invalid location string")
 
+
 def generate_card(card_str: str | None) -> Card | None:
     if card_str is None:
         return None
