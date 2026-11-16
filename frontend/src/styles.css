@@ -1,5 +1,5 @@
 :root {
-  font-family: Arial, Helvetica, sans-serif;
+  font: 100%/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
   background: #f4f4f4;
   color: #222;
 }
@@ -17,6 +17,15 @@ select {
 button {
   cursor: pointer;
   padding: 8px 14px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  background: #fff;
+  /* feedback on press, not release */
+  transition: transform 100ms ease-out;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 button:disabled {
@@ -27,6 +36,8 @@ button:disabled {
 input,
 select {
   padding: 8px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
 }
 
 .app {
@@ -41,17 +52,19 @@ header {
 
 header h1 {
   margin-bottom: 4px;
+  letter-spacing: -0.02em;
 }
 
 header p {
   margin-top: 0;
+  color: #555;
 }
 
 .panel,
 .status-panel {
   background: white;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 18px;
   margin-bottom: 16px;
 }
@@ -65,21 +78,296 @@ header p {
   display: flex;
   gap: 8px;
   margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+.hint {
+  color: #777;
+  font-size: 0.9em;
+  margin: 8px 0 0;
+}
+
+/* turn indicator */
+.turn-banner {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  background: #eee;
+  font-weight: 600;
+}
+
+.turn-banner.my-turn {
+  background: #e7f3e9;
+  border-color: #4c9a5f;
+}
+
+/* board */
+.board {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr 1fr 2fr;
+  grid-template-rows: 2fr 1fr 2fr 1fr 2fr;
+  gap: 4px;
+  aspect-ratio: 1;
+  max-width: 640px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.tile.room {
+  background: #ececec;
+  border: 1px solid #c8c8c8;
+}
+
+.tile.hallway {
+  background: #f8f8f8;
+  border: 1px dashed #ccc;
+}
+
+.tile.legal {
+  border-color: #4c9a5f;
+  box-shadow: inset 0 0 0 2px #4c9a5f;
+}
+
+.tile-name {
+  font-size: 0.85em;
+  font-weight: 600;
+  text-align: center;
+}
+
+.passage {
+  font-size: 0.8em;
+  color: #777;
+}
+
+.tokens {
+  display: flex;
+}
+
+.token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.65em;
+  font-weight: 700;
+  border: 2px solid #fff;
+  margin-left: -6px;
+}
+
+.token:first-child {
+  margin-left: 0;
+}
+
+.token.mine {
+  border-color: #222;
+}
+
+/* action buttons */
+.action-panel {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* cards */
+.card-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+.card-chip small {
+  color: #777;
+  text-transform: capitalize;
+}
+
+/* event log */
+.events {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.event {
+  padding: 4px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.event-time {
+  color: #777;
+  font-size: 0.85em;
+  margin-right: 6px;
+}
+
+/* end of game */
+.end-game {
+  border-color: #4c9a5f;
+  background: #e7f3e9;
+}
+
+/* lobby */
+.game-id-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.game-id-row code {
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.character.chosen {
+  border-color: #4c9a5f;
+  box-shadow: inset 0 0 0 2px #4c9a5f;
+  background: #e7f3e9;
+}
+
+.player-list {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+/* modals */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.modal {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  width: min(420px, calc(100vw - 32px));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  animation: modal-in 150ms ease-out;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.modal-close {
+  border: none;
+  background: none;
+  font-size: 1.4em;
+  padding: 0 6px;
+}
+
+.modal-note {
+  color: #555;
+  margin-top: 0;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0;
+}
+
+.field span {
+  font-size: 0.9em;
+  color: #555;
+}
+
+/* rejection toasts */
+.toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: grid;
+  gap: 8px;
+  z-index: 20;
+}
+
+.toast {
+  background: #2c2c2c;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  max-width: 320px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  animation: toast-in 150ms ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* raw message log, dev tool */
+.log-panel summary {
+  cursor: pointer;
+  font-weight: 600;
 }
 
 .log-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
+  margin: 10px 0;
 }
 
 .log {
   background: #111;
   color: #eee;
-  min-height: 250px;
-  max-height: 500px;
+  min-height: 120px;
+  max-height: 400px;
   overflow-y: auto;
   padding: 12px;
+  border-radius: 6px;
 }
 
 .log-entry {
@@ -99,4 +387,18 @@ header p {
 
 .log-entry.ERROR {
   font-weight: bold;
+}
+
+/* reduced motion, fade instead of move */
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .modal,
+  .toast {
+    transition: none;
+    animation: none;
+  }
+
+  button:active:not(:disabled) {
+    transform: none;
+  }
 }
