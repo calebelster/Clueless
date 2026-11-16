@@ -107,20 +107,20 @@ The skeletal client connects to the Flask server over WebSocket at:
 ws://127.0.0.1:5000/ws
 ```
 
-## Skeletal client flow
+## Client flow
 
-The current skeletal implementation supports end-to-end communication between the React client and the backend subsystems.
-
-A typical test flow is:
+The client supports the minimal game flow:
 
 1. Sign in with a display name using Firebase anonymous authentication.
-2. Create a game or join an existing game using its game ID.
-3. Select a character.
-4. Start the game.
-5. Send representative game actions such as `MOVE_REQ` or `END_TURN_REQ`.
-6. Observe `GAME_STATE_UPDATE` and `EVENT_LOG_NOTIFICATION` messages in the client communication log.
+2. Create a game or join one with its game ID, then pick a character.
+3. The host starts the game (3 to 6 players, every player has a character).
+4. Click a highlighted board tile to move; the server rejects illegal moves.
+5. Suggest from a room; prompted players disprove or pass.
+6. Accuse to win; a wrong accusation eliminates the accuser.
+7. Game state, events, and rejections update live across all clients.
 
-The current skeletal increment focuses on subsystem communication and architecture validation rather than full gameplay behavior.
+Suggestion, disprove, and accuse support depends on the backend Rules Engine
+integration.
 
 ## Message protocol
 
@@ -132,8 +132,11 @@ The current skeletal increment focuses on subsystem communication and architectu
 | `JOIN_GAME_REQ` | Client → Server | Join an existing game session |
 | `SELECT_CHAR_REQ` | Client → Server | Select a character for the authenticated player |
 | `START_GAME_REQ` | Client → Server | Start a game session |
-| `MOVE_REQ` | Client → Server | Forward a movement action toward the Rules Engine |
-| `END_TURN_REQ` | Client → Server | Forward an end-turn action toward the Rules Engine |
+| `MOVE_REQ` | Client → Server | Move the player's character to `payload.targetLocationId` |
+| `SUGGEST_REQ` | Client → Server | Suggest `payload.character` and `payload.weapon`; the room is implicit (the suggester's current room) |
+| `DISPROVE_REQ` | Client → Server | Disprove the current suggestion with `payload.card` (the card as dealt) or `payload.card: null` to pass |
+| `ACCUSE_REQ` | Client → Server | Accuse `payload.character`, `payload.weapon`, and `payload.room` |
+| `END_TURN_REQ` | Client → Server | End the player's turn |
 | `GAME_STATE_UPDATE` | Server → Clients | Broadcast the current shared game-session state |
 | `EVENT_LOG_NOTIFICATION` | Server → Clients | Broadcast a game/session event description |
 | `ACTION_REJECTED` | Server → Client | Return an authentication, validation, or request error |
