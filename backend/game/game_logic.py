@@ -73,7 +73,7 @@ DECK = {
 
 
 class Card:
-    def __init__(self, card_type: str, name: str):
+    def __init__(self, card_type: str, name: str | None):
         self.card_type = CardType(card_type)
         match self.card_type:
             case CardType.ROOM:
@@ -574,3 +574,26 @@ class Game:
             "suggestion_round": self.suggestion_round,
             "created_at": self.created_at,
         }
+
+
+def generate_location(location_str: str | None) -> Location:
+    if location_str is None:
+        raise ValueError("Invalid location string")
+    if location_str.lower() in HallType:
+        return Location(LocationType.HALLWAY.value, location_str)
+    elif location_str.lower() in RoomType:
+        return Location(LocationType.ROOM.value, location_str)
+    else:
+        raise ValueError("Invalid location string")
+
+def generate_card(card_str: str | None) -> Card | None:
+    if card_str is None:
+        return None
+    if card_str in WeaponType:
+        return Card(CardType.WEAPON.value, card_str)
+    elif card_str in RoomType:
+        return Card(CardType.ROOM.value, card_str)
+    elif card_str in CharType:
+        return Card(CardType.CHARACTER.value, card_str)
+    else:
+        raise ValueError("Invalid card string")

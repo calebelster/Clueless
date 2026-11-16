@@ -20,6 +20,8 @@ import logging
 import random
 import uuid
 
+from proto.marshal.marshal import Rule
+
 from game import db
 from game.game_logic import (
     Card,
@@ -32,53 +34,68 @@ from game.game_logic import (
     Player,
     RoomType,
     WeaponType,
+    generate_card,
+    generate_location
 )
-from game.rules_engine import RulesEngine
+from game.rules_engine import RulesEngine, Reason
 
 logger = logging.getLogger(__name__)
 
 
-CHARACTERS = (
-    "Miss Scarlet",
-    "Colonel Mustard",
-    "Mrs. White",
-    "Mr. Green",
-    "Mrs. Peacock",
-    "Professor Plum",
-)
-WEAPONS = ("Rope", "Lead Pipe", "Knife", "Wrench", "Candlestick", "Revolver")
-ROOMS = (
-    "Study",
-    "Hall",
-    "Lounge",
-    "Library",
-    "Billiard Room",
-    "Dining Room",
-    "Conservatory",
-    "Ballroom",
-    "Kitchen",
-)
+# CHARACTERS = (
+#     "Miss Scarlet",
+#     "Colonel Mustard",
+#     "Mrs. White",
+#     "Mr. Green",
+#     "Mrs. Peacock",
+#     "Professor Plum",
+# )
+# WEAPONS = ("Rope", "Lead Pipe", "Knife", "Wrench", "Candlestick", "Revolver")
+# ROOMS = (
+#     "Study",
+#     "Hall",
+#     "Lounge",
+#     "Library",
+#     "Billiard Room",
+#     "Dining Room",
+#     "Conservatory",
+#     "Ballroom",
+#     "Kitchen",
+# )
 
 # Hallway each character occupies when the game is initialized
-STARTING_HALLWAY = {
-    "Miss Scarlet": "hall-lounge",
-    "Colonel Mustard": "lounge-dining",
-    "Mrs. White": "ballroom-kitchen",
-    "Mr. Green": "conservatory-ballroom",
-    "Mrs. Peacock": "library-conservatory",
-    "Professor Plum": "study-library",
-}
+# STARTING_HALLWAY = {
+#     "Miss Scarlet": "hall-lounge",
+#     "Colonel Mustard": "lounge-dining",
+#     "Mrs. White": "ballroom-kitchen",
+#     "Mr. Green": "conservatory-ballroom",
+#     "Mrs. Peacock": "library-conservatory",
+#     "Professor Plum": "study-library",
+# }
 
 MIN_PLAYERS = 3
 MAX_PLAYERS = 6
 
-RULES_MESSAGES = (
-    "MOVE_REQ",
-    "SUGGEST_REQ",
-    "DISPROVE_REQ",
-    "ACCUSE_REQ",
-    "END_TURN_REQ",
-)
+
+class RequestType:
+    CREATE_GAME_REQ = "CREATE_GAME_REQ"
+    JOIN_GAME_REQ = "JOIN_GAME_REQ"
+    SELECT_CHAR_REQ = "SELECT_CHAR_REQ"
+    START_GAME_REQ = "START_GAME_REQ"
+    MOVE_REQ = "MOVE_REQ"
+    SUGGEST_REQ = "SUGGEST_REQ"
+    DISPROVE_REQ = "DISPROVE_REQ"
+    ACCUSE_REQ = "ACCUSE_REQ"
+    END_TURN_REQ = "END_TURN_REQ"
+
+
+RULES_REQUESTS = {    
+    RequestType.MOVE_REQ,
+    RequestType.SUGGEST_REQ,
+    RequestType.DISPROVE_REQ,
+    RequestType.ACCUSE_REQ,
+    RequestType.END_TURN_REQ,
+}
 
 
 class ERROR_CODE:
@@ -94,6 +111,8 @@ class ERROR_CODE:
     PLAYER_COUNT = "PLAYER_COUNT"
     MISSING_CHARACTER = "MISSING_CHARACTER"
     MISS_SCARLET_REQUIRED = "MISS_SCARLET_REQUIRED"
+    MALFORMED_MESSAGE = "MALFORMED_MESSAGE"
+    INVALID_MESSAGE_TYPE = "INVALID_MESSAGE_TYPE"
 
 
 class ACTION_STATUS:
@@ -101,13 +120,6 @@ class ACTION_STATUS:
 
 
 UNKNOWN_GAME_ID = "unknown"
-
-
-rules_engine = RulesEngine()
-
-
-def _rules_engine_stub(action, game, player, payload):
-    return rules_engine.execute(action, game, player, payload)
 
 
 def _rejected(error_code, reason):
@@ -254,33 +266,36 @@ def dispatch(message):
     Called by Communication
     """
     if not isinstance(message, dict):
-        return _rejected("MALFORMED_MESSAGE", "message is malformed"), None
+        return _rejected(ERROR_CODE.MALFORMED_MESSAGE, "message is malformed"), None
 
-    type = message.get("type")
+    req_type = message.get("type")
+
     player_id = message.get("playerId")
     display_name = message.get("displayName") or ""
     payload = message.get("payload")
     if not isinstance(payload, dict):
         payload = {}
     if not isinstance(player_id, str) or not player_id:
-        return _rejected("PLAYER_NOT_IN_GAME", "Player is not in a game"), None
+        return _rejected(ERROR_CODE.PLAYER_NOT_IN_GAME, "Player is not in a game"), None
 
-    # Create Game
-    if type == "CREATE_GAME_REQ":
-        return create_game(player_id, display_name)
-    # Join game
-    if type == "JOIN_GAME_REQ":
-        return join_game(payload.get("gameId"), player_id, display_name)
-    # Select Character
-    if type == "SELECT_CHAR_REQ":
-        return select_character(player_id, payload.get("characterId"))
-    # Start Game
-    if type == "START_GAME_REQ":
-        return start_game(payload.get("gameId"), player_id)
-    # Forwards mess to rule engine
-    if type in RULES_MESSAGES:
-        return handle_action(player_id, message)
-    return _rejected("INVALID_MESSAGE_TYPE", "message type is invalid"), None
+    match req_type:
+        case RequestType.CREATE_GAME_REQ:
+            # Create Game
+            return create_game(player_id, display_name)
+        case RequestType.JOIN_GAME_REQ:
+            # Join Game
+            return join_game(payload.get("gameId"), player_id, display_name)
+        case RequestType.SELECT_CHAR_REQ:
+            # Select Character
+            return select_character(player_id, payload.get("characterId"))
+        case RequestType.START_GAME_REQ:
+            # Start Game
+            return start_game(payload.get("gameId"), player_id)
+        case req if req in RULES_REQUESTS:
+            # Forward message to rules engine
+            return handle_action(player_id, message)
+        case _:
+            return _rejected(ERROR_CODE.INVALID_MESSAGE_TYPE, "message type is invalid"), None
 
 
 def create_game(host_id, display_name):
@@ -326,7 +341,7 @@ def join_game(game_id, player_id, display_name):
 
     # Get game
     if game_id is None:
-        pass
+        return _rejected(ERROR_CODE.GAME_NOT_FOUND, f"game {game_id} not found"), None
 
     game_state = _load_game(game_id)
     if game_state is None:
@@ -335,8 +350,10 @@ def join_game(game_id, player_id, display_name):
         return _rejected(ERROR_CODE.GAME_NOT_FOUND, f"game {game_id} not found"), None
 
     # Cannot add players after game has started
-    if game_state.status != GameStatus.LOBBY:
-        raise NotImplementedError
+    if game_state.status == GameStatus.STARTED:
+        return _rejected(ERROR_CODE.GAME_ALREADY_STARTED, "Game has already started"), None
+    elif game_state.status == GameStatus.ENDED:
+        return _rejected(ERROR_CODE.GAME_ENDED, "Game has ended"), None
 
     # Create player
     player = Player(player_id, display_name)
@@ -360,7 +377,7 @@ def join_game(game_id, player_id, display_name):
     return _saved(game_id, game_state, "PLAYER_JOINED", f"{display_name} joined {game_id}")
 
 
-def select_character(player_id: str, character_id: str):
+def select_character(player_id: str, character_id: str | None):
     """
     FR-GS-3
     Save the player's character
@@ -380,6 +397,11 @@ def select_character(player_id: str, character_id: str):
             ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"
         ), None
     # character is not one of the six available suspects
+
+    if character_id is None:
+        return _rejected(
+            ERROR_CODE.CHARACTER_UNKNOWN, "Character is not one of the six suspects"
+        ), None
 
     try:
         character = Character(character_id.lower())
@@ -458,6 +480,8 @@ def handle_action(player_id, message):
     """
     Look up the game and player, then forward to the Rules Engine
     """
+    rules_engine = RulesEngine()
+
     msg_type = message.get("type")
     game_id, game_state = find_game_player(player_id)
 
@@ -478,7 +502,56 @@ def handle_action(player_id, message):
 
     player = game_state.players[player_id]
     logger.info(f"[GAME] Looked up {game_id} | {player_id} -> forward {msg_type} to Rules Engine")
-    accepted, reason = _rules_engine_stub(msg_type, game_state, player, payload)
+
+
+    match msg_type:
+        case RequestType.MOVE_REQ:
+            try:
+                location = generate_location(payload.get("targetLocationId"))
+                accepted, reason = rules_engine.validate_move(game_state, player, location)
+                if accepted:
+                    rules_engine.perform_move(game_state, player, location)
+            except ValueError:
+                accepted = False
+                reason = Reason.INVALID_LOCATION
+        case RequestType.SUGGEST_REQ:
+            try:
+                character = Card(CardType.CHARACTER.value, payload.get("suspect"))
+                weapon = Card(CardType.WEAPON.value, payload.get("weapon"))
+                accepted, reason = rules_engine.validate_suggest(game_state, player, character, weapon)
+                if accepted:
+                    rules_engine.perform_suggest(game_state, player, character, weapon)
+            except ValueError:
+                accepted = False
+                reason = Reason.INVALID_CARD
+        case RequestType.DISPROVE_REQ:
+            try:
+                card = generate_card(payload.get("selectedCardId"))
+                accepted, reason = rules_engine.validate_disprove(game_state, player, card)
+                if accepted:
+                    rules_engine.perform_disprove(game_state, player, card)
+            except ValueError:
+                accepted = False
+                reason = Reason.INVALID_CARD
+        case RequestType.ACCUSE_REQ:
+            try:
+                weapon = Card(CardType.WEAPON.value, payload.get("weapon"))
+                room = Card(CardType.ROOM.value, payload.get("room"))
+                character = Card(CardType.CHARACTER.value, payload.get("suspect"))
+                accepted, reason = rules_engine.validate_accuse(game_state, player, weapon, room, character)
+                if accepted:
+                    rules_engine.perform_accuse(game_state, player, weapon, room, character)
+            except ValueError:
+                accepted = False
+                reason = Reason.INVALID_CARD
+            pass
+        case RequestType.END_TURN_REQ:
+            accepted, reason = rules_engine.validate_end_turn(game_state, player)
+            if accepted:
+                rules_engine.perform_end_turn(game_state, player)
+        case _:
+            accepted = False
+            reason = ERROR_CODE.INVALID_MESSAGE_TYPE
 
     if not accepted:
         error_msg = reason or "Action rejected by rule engine"

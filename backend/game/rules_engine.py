@@ -73,6 +73,9 @@ class Reason:
     END_TURN_DURING_SUGGEST = "Player cannot end turn during an active suggestion round"
     INVALID_ACCUSATION_CARDS = "Accusation must contain a weapon, room, and character card"
     CASE_FILE_MISSING = "Game has no Case File"
+    INVALID_LOCATION = "Not a valid location"
+    INVALID_CARD = "Not a valid card"
+    INVALID_REQ = "Invalid request"
 
 
 class RulesEngine:
