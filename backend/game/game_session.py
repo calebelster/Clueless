@@ -19,58 +19,105 @@ The actions of the player is forwarded to the rule engine for validation:
 import logging
 import random
 import uuid
-from datetime import UTC, datetime
 
-from game import db, rules_engine
+from game import db
+from game.game_logic import (
+    Card,
+    CardType,
+    CaseFile,
+    Character,
+    CharType,
+    Game,
+    GameStatus,
+    Player,
+    RoomType,
+    WeaponType,
+    generate_card,
+    generate_location,
+)
+from game.rules_engine import Reason, RulesEngine
 
 logger = logging.getLogger(__name__)
 
 
-CHARACTERS = (
-    "Miss Scarlet",
-    "Colonel Mustard",
-    "Mrs. White",
-    "Mr. Green",
-    "Mrs. Peacock",
-    "Professor Plum",
-)
-WEAPONS = ("Rope", "Lead Pipe", "Knife", "Wrench", "Candlestick", "Revolver")
-ROOMS = (
-    "Study",
-    "Hall",
-    "Lounge",
-    "Library",
-    "Billiard Room",
-    "Dining Room",
-    "Conservatory",
-    "Ballroom",
-    "Kitchen",
-)
+# CHARACTERS = (
+#     "Miss Scarlet",
+#     "Colonel Mustard",
+#     "Mrs. White",
+#     "Mr. Green",
+#     "Mrs. Peacock",
+#     "Professor Plum",
+# )
+# WEAPONS = ("Rope", "Lead Pipe", "Knife", "Wrench", "Candlestick", "Revolver")
+# ROOMS = (
+#     "Study",
+#     "Hall",
+#     "Lounge",
+#     "Library",
+#     "Billiard Room",
+#     "Dining Room",
+#     "Conservatory",
+#     "Ballroom",
+#     "Kitchen",
+# )
 
 # Hallway each character occupies when the game is initialized
-STARTING_HALLWAY = {
-    "Miss Scarlet": "hall-lounge",
-    "Colonel Mustard": "lounge-dining",
-    "Mrs. White": "ballroom-kitchen",
-    "Mr. Green": "conservatory-ballroom",
-    "Mrs. Peacock": "library-conservatory",
-    "Professor Plum": "study-library",
-}
+# STARTING_HALLWAY = {
+#     "Miss Scarlet": "hall-lounge",
+#     "Colonel Mustard": "lounge-dining",
+#     "Mrs. White": "ballroom-kitchen",
+#     "Mr. Green": "conservatory-ballroom",
+#     "Mrs. Peacock": "library-conservatory",
+#     "Professor Plum": "study-library",
+# }
 
 MIN_PLAYERS = 3
 MAX_PLAYERS = 6
 
-RULES_MESSAGES = (
-    "MOVE_REQ",
-    "SUGGEST_REQ",
-    "DISPROVE_REQ",
-    "ACCUSE_REQ",
-    "END_TURN_REQ",
-)
+
+class RequestType:
+    CREATE_GAME_REQ = "CREATE_GAME_REQ"
+    JOIN_GAME_REQ = "JOIN_GAME_REQ"
+    SELECT_CHAR_REQ = "SELECT_CHAR_REQ"
+    START_GAME_REQ = "START_GAME_REQ"
+    MOVE_REQ = "MOVE_REQ"
+    SUGGEST_REQ = "SUGGEST_REQ"
+    DISPROVE_REQ = "DISPROVE_REQ"
+    ACCUSE_REQ = "ACCUSE_REQ"
+    END_TURN_REQ = "END_TURN_REQ"
 
 
-def _rules_engine_stub(action, game, player, payload):
-    return rules_engine.execute(action, game, player, payload)
+RULES_REQUESTS = {
+    RequestType.MOVE_REQ,
+    RequestType.SUGGEST_REQ,
+    RequestType.DISPROVE_REQ,
+    RequestType.ACCUSE_REQ,
+    RequestType.END_TURN_REQ,
+}
+
+
+class ERROR_CODE:
+    GAME_NOT_FOUND = "GAME_NOT_FOUND"
+    GAME_FULL = "GAME_FULL"
+    CHARACTER_UNKNOWN = "CHARACTER_UNKNOWN"
+    CHARACTER_TAKEN = "CHARACTER_TAKEN"
+    ALREADY_JOINED = "ALREADY_JOINED"
+    PLAYER_NOT_IN_GAME = "PLAYER_NOT_IN_GAME"
+    NOT_HOST = "NOT_HOST"
+    GAME_ALREADY_STARTED = "GAME_ALREADY_STARTED"
+    GAME_ENDED = "GAME_ENDED"
+    PLAYER_COUNT = "PLAYER_COUNT"
+    MISSING_CHARACTER = "MISSING_CHARACTER"
+    MISS_SCARLET_REQUIRED = "MISS_SCARLET_REQUIRED"
+    MALFORMED_MESSAGE = "MALFORMED_MESSAGE"
+    INVALID_MESSAGE_TYPE = "INVALID_MESSAGE_TYPE"
+
+
+class ACTION_STATUS:
+    ACTION_REJECTED = "ACTION_REJECTED"
+
+
+UNKNOWN_GAME_ID = "unknown"
 
 
 def _rejected(error_code, reason):
@@ -79,12 +126,12 @@ def _rejected(error_code, reason):
     """
     logger.info(f"[GAME] REJECTED: {reason}")
     return {
-        "type": "ACTION_REJECTED",
+        "type": ACTION_STATUS.ACTION_REJECTED,
         "payload": {"errorCode": error_code, "reason": reason},
     }
 
 
-def _load_game(game_id):
+def _load_game(game_id: str) -> Game | None:
     """
     Load a game by game_id from db
     """
@@ -92,84 +139,69 @@ def _load_game(game_id):
         return None
 
     try:
-        return db.load_game(game_id)
+        game_state = db.load_game(game_id)
+        if game_state is None:
+            return None
+        return Game.from_dict(db.load_game(game_id))
     except ValueError:
         return None
 
 
-def _players_in_turn_order(players):
+def _players_in_turn_order(players: dict[str, Player]):
     """
     Player ids in character order
     """
     order = []
     # Iterate throught the characters in turn order
-    for character in CHARACTERS:
-        for player_id, info in players.items():
-            # When player is found, add player_id to to the turn order
-            if info.get("characterId") == character:
+    for char_type in CharType:
+        for player_id, player in players.items():
+            assert player.character is not None
+            if player.character.name == char_type:
                 order.append(player_id)
-                break
+
+    assert len(order) == len(players)
+
     return order
 
 
-def _setup_game(game_state):
+def _setup_game(game_state: Game):
     """
     Sets up the game FR-GS-5, FR-GS-6, FR-GS-7, FR-GS-8
     """
 
-    players = game_state["players"]
+    players = game_state.players
     deck = []
 
-    # Set up case file
-    case_file = {
-        "suspect": random.choice(CHARACTERS),
-        "weapon": random.choice(WEAPONS),
-        "room": random.choice(ROOMS),
-    }
+    deck = Card.all_cards()
 
-    # Put every suspect into the deck except the one hidden in the Case File
-    for name in CHARACTERS:
-        if name != case_file["suspect"]:
-            deck.append({"category": "suspect", "name": name})
-    # Put every weapon into the deck except the one hidden in the Case File
-    for name in WEAPONS:
-        if name != case_file["weapon"]:
-            deck.append({"category": "weapon", "name": name})
-    # Put every room into the deck except the on hidden in the Case File
-    for name in ROOMS:
-        if name != case_file["room"]:
-            deck.append({"category": "room", "name": name})
+    # Set up Case File
+    character = Card(CardType.CHARACTER.value, random.choice([c for c in CharType]).value)
+    weapon = Card(CardType.WEAPON.value, random.choice([w for w in WeaponType]).value)
+    room = Card(CardType.ROOM.value, random.choice([r for r in RoomType]).value)
+    case_file = CaseFile(room, weapon, character)
 
-    # Shuffle the deck
+    # Shuffle remaining cards
+    deck = [card for card in deck if card not in {character, weapon, room}]
     random.shuffle(deck)
 
+    # Create turn order
+    turn_order = _players_in_turn_order(game_state.players)
+
     # Deal the card one at a time in turn order
-    order = _players_in_turn_order(players)
     for index, card in enumerate(deck):
-        player_id = order[index % len(order)]
-        players[player_id].setdefault("hand", []).append(card)
+        player_id = turn_order[index % len(turn_order)]
+        players[player_id].add_card(card)
 
-    board = {}
-    active = {}
-    scarlet = None
-    # Put each character in a starting hallway
-    for player_id, info in players.items():
-        character = info["characterId"]
-        board[character] = STARTING_HALLWAY[character]
-        active[player_id] = "active"
-        if character == "Miss Scarlet":
-            scarlet = player_id
+    game_state.case_file = case_file
+    game_state.turn_order = turn_order
+    game_state.status = GameStatus.STARTED
 
-    # Save the game state
-    game_state["caseFile"] = case_file
-    game_state["turnOrder"] = order
-    game_state["status"] = "started"
-    # Get game stubState, create new it None
-    stub = game_state.setdefault("stubState", {})
-    # The player who is miss scarlet should move first
-    stub["currentTurnPlayer"] = scarlet
-    stub["boardLocations"] = board
-    stub["activeStatus"] = active
+    start_idx = 0
+    for i, id in enumerate(turn_order):
+        if game_state.players[id].character.name == CharType.MISS_SCARLET:
+            start_idx = i
+
+    game_state.current_turn_index = start_idx
 
 
 def find_game_player(player_id):
@@ -194,17 +226,25 @@ def _saved(game_id, game_state, event_type, description):
     """
 
     db.log_action(game_id, {"type": event_type, "description": description})
-    stub_state = game_state.get("stubState") or {}
+
+    if game_state.suggestion_round:
+        current_turn_index = game_state.disprove_turn_index
+    else:
+        current_turn_index = game_state.current_turn_index
+
+    # stub_state = game_state.get("stubState") or {}
     state_message = {
         "type": "GAME_STATE_UPDATE",
         "payload": {
             "gameId": game_id,
-            "status": game_state.get("status"),
-            "players": game_state.get("players", {}),
-            "currentTurnPlayer": stub_state.get("currentTurnPlayer"),
-            "boardLocations": stub_state.get("boardLocations") or {},
-            "activeStatus": stub_state.get("activeStatus") or {},
-            "turnOrder": game_state.get("turnOrder") or [],
+            "status": game_state.status.value,
+            "players": {
+                player_id: player.to_dict() for player_id, player in game_state.players.items()
+            },
+            "currentTurnPlayer": game_state.turn_order[current_turn_index],
+            # "boardLocations": stub_state.get("boardLocations") or {}, TODO - What is this supposed to be?
+            # "activeStatus": stub_state.get("activeStatus") or {}, TODO - what is active status supposed to be?
+            "turnOrder": game_state.turn_order,
         },
     }
     notification = {
@@ -224,33 +264,36 @@ def dispatch(message):
     Called by Communication
     """
     if not isinstance(message, dict):
-        return _rejected("MALFORMED_MESSAGE", "message is malformed"), None
+        return _rejected(ERROR_CODE.MALFORMED_MESSAGE, "message is malformed"), None
 
-    type = message.get("type")
+    req_type = message.get("type")
+
     player_id = message.get("playerId")
     display_name = message.get("displayName") or ""
     payload = message.get("payload")
     if not isinstance(payload, dict):
         payload = {}
     if not isinstance(player_id, str) or not player_id:
-        return _rejected("PLAYER_NOT_IN_GAME", "Player is not in a game"), None
+        return _rejected(ERROR_CODE.PLAYER_NOT_IN_GAME, "Player is not in a game"), None
 
-    # Create Game
-    if type == "CREATE_GAME_REQ":
-        return create_game(player_id, display_name)
-    # Join game
-    if type == "JOIN_GAME_REQ":
-        return join_game(payload.get("gameId"), player_id, display_name)
-    # Select Character
-    if type == "SELECT_CHAR_REQ":
-        return select_character(player_id, payload.get("characterId"))
-    # Start Game
-    if type == "START_GAME_REQ":
-        return start_game(payload.get("gameId"), player_id)
-    # Forwards mess to rule engine
-    if type in RULES_MESSAGES:
-        return handle_action(player_id, message)
-    return _rejected("INVALID_MESSAGE_TYPE", "message type is invalid"), None
+    match req_type:
+        case RequestType.CREATE_GAME_REQ:
+            # Create Game
+            return create_game(player_id, display_name)
+        case RequestType.JOIN_GAME_REQ:
+            # Join Game
+            return join_game(payload.get("gameId"), player_id, display_name)
+        case RequestType.SELECT_CHAR_REQ:
+            # Select Character
+            return select_character(player_id, payload.get("characterId"))
+        case RequestType.START_GAME_REQ:
+            # Start Game
+            return start_game(payload.get("gameId"), player_id)
+        case req if req in RULES_REQUESTS:
+            # Forward message to rules engine
+            return handle_action(player_id, message)
+        case _:
+            return _rejected(ERROR_CODE.INVALID_MESSAGE_TYPE, "message type is invalid"), None
 
 
 def create_game(host_id, display_name):
@@ -259,24 +302,27 @@ def create_game(host_id, display_name):
     Create a new game session
     """
     game_id = "g-" + uuid.uuid4().hex[:8]
-    current_time = datetime.now(UTC).isoformat()
-    game_state = {
-        "status": "lobby",
-        "hostId": host_id,
-        "createdAt": current_time,
-        "players": {
-            host_id: {
-                "displayName": display_name,
-                "characterId": None,
-                "joinedAt": current_time,
-            }
-        },
-        "stubState": {
-            "currentTurnPlayer": None,
-            "boardLocations": {},
-            "activeStatus": {},
-        },
-    }
+
+    host = Player(host_id, display_name)
+    game_state = Game(game_id, host)
+
+    # game_state = {
+    #     "status": "lobby",
+    #     "hostId": host_id,
+    #     "createdAt": current_time,
+    #     "players": {
+    #         host_id: {
+    #             "displayName": display_name,
+    #             "characterId": None,
+    #             "joinedAt": current_time,
+    #         }
+    #     },
+    #     "stubState": {
+    #         "currentTurnPlayer": None,
+    #         "boardLocations": {},
+    #         "activeStatus": {},
+    #     },
+    # }
 
     db.save_game(game_id, game_state)
     db.save_player(host_id, display_name, game_id)
@@ -290,30 +336,46 @@ def join_game(game_id, player_id, display_name):
     FR-GS-2
     Join a game session
     """
+
+    # Get game
+    if game_id is None:
+        return _rejected(ERROR_CODE.GAME_NOT_FOUND, f"game {game_id} not found"), None
+
     game_state = _load_game(game_id)
     if game_state is None:
         if not game_id:
-            game_id = "unknown"
-        return _rejected("GAME_NOT_FOUND", f"game {game_id} not found"), None
+            game_id = UNKNOWN_GAME_ID
+        return _rejected(ERROR_CODE.GAME_NOT_FOUND, f"game {game_id} not found"), None
 
-    # A game can only have at most 6 player
-    players = game_state.setdefault("players", {})
-    if player_id not in players and len(players) >= MAX_PLAYERS:
-        return _rejected("GAME_FULL", "Game has 6 players already"), None
+    # Cannot add players after game has started
+    if game_state.status == GameStatus.STARTED:
+        return _rejected(ERROR_CODE.GAME_ALREADY_STARTED, "Game has already started"), None
+    elif game_state.status == GameStatus.ENDED:
+        return _rejected(ERROR_CODE.GAME_ENDED, "Game has ended"), None
 
-    players[player_id] = {
-        "displayName": display_name,
-        "characterId": None,
-        "joinedAt": datetime.now(UTC).isoformat(),
-    }
+    # Create player
+    player = Player(player_id, display_name)
+
+    # A game can only have at most 6 players
+    if player_id not in game_state.players and len(game_state.players) >= MAX_PLAYERS:
+        return _rejected(ERROR_CODE.GAME_FULL, "Game has 6 players already"), None
+
+    # Player already in game
+    if player_id in game_state.players:
+        # Do nothing? Throw Error
+        return _rejected(ERROR_CODE.ALREADY_JOINED, "Player has already joined game")
+
+    # Add player
+    game_state.add_player(player)
+
     db.save_game(game_id, game_state)
     db.save_player(player_id, display_name, game_id)
-    logger.info(f"[GAME] {player_id} joined {game_id} ({len(game_state['players'])} players)")
+    logger.info(f"[GAME] {player_id} joined {game_id} ({len(game_state.players)} players)")
 
     return _saved(game_id, game_state, "PLAYER_JOINED", f"{display_name} joined {game_id}")
 
 
-def select_character(player_id, character_id):
+def select_character(player_id: str, character_id: str | None):
     """
     FR-GS-3
     Save the player's character
@@ -321,26 +383,42 @@ def select_character(player_id, character_id):
     game_id, game_state = find_game_player(player_id)
 
     if game_id is None:
-        return _rejected("PLAYER_NOT_IN_GAME", "Player is not in a game"), None
+        return _rejected(ERROR_CODE.PLAYER_NOT_IN_GAME, "Player is not in a game"), None
     if game_state is None:
         if not game_id:
-            game_id = "unknown"
-        return _rejected("GAME_NOT_FOUND", f"game {game_id} not found"), None
+            game_id = UNKNOWN_GAME_ID
+        return _rejected(ERROR_CODE.GAME_NOT_FOUND, f"game {game_id} not found"), None
 
     # player_id is not in the game
-    if player_id not in game_state.get("players", {}):
-        return _rejected("PLAYER_NOT_IN_GAME", f"player {player_id} is not in {game_id}"), None
+    if player_id not in game_state.players:
+        return _rejected(
+            ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"
+        ), None
     # character is not one of the six available suspects
-    if character_id not in CHARACTERS:
-        return _rejected("CHARACTER_UNKNOWN", "Character is not one of the six suspects"), None
+
+    if character_id is None:
+        return _rejected(
+            ERROR_CODE.CHARACTER_UNKNOWN, "Character is not one of the six suspects"
+        ), None
+
+    try:
+        character = Character(character_id.lower())
+    except ValueError:
+        return _rejected(
+            ERROR_CODE.CHARACTER_UNKNOWN, "Character is not one of the six suspects"
+        ), None
 
     # Check if character is already chosen
-    for other_id, info in game_state["players"].items():
-        if other_id != player_id and info.get("characterId") == character_id:
-            return _rejected("CHARACTER_TAKEN", f"{character_id} is already taken"), None
+    for curr_player_id, player in game_state.players.items():
+        if (
+            curr_player_id != player_id
+            and player.character is not None
+            and player.character.name == character.name
+        ):
+            return _rejected(ERROR_CODE.CHARACTER_TAKEN, f"{character_id} is already taken"), None
 
-    player = game_state["players"][player_id]
-    player["characterId"] = character_id
+    game_state.players[player_id].set_character(character)
+
     db.save_game(game_id, game_state)  # Store character
 
     logger.info(f"[GAME] {player_id} selected {character_id} in {game_id}")
@@ -357,36 +435,36 @@ def start_game(game_id, player_id):
 
     if game_state is None:
         if not game_id:
-            game_id = "unknown"
-        return _rejected("GAME_NOT_FOUND", f"game {game_id} not found"), None
-    if player_id not in game_state.get("players", {}):
-        return _rejected("PLAYER_NOT_IN_GAME", f"player {player_id} is not in {game_id}"), None
-    if player_id != game_state.get("hostId"):
-        return _rejected("NOT_HOST", "Only the player who created the game can start it"), None
-    if game_state.get("status") == "started":
-        return _rejected("GAME_ALREADY_STARTED", "Game has already started"), None
+            game_id = UNKNOWN_GAME_ID
+        return _rejected(ERROR_CODE.GAME_NOT_FOUND, f"game {game_id} not found"), None
+    if player_id not in game_state.players:
+        return _rejected(
+            ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"
+        ), None
+    if player_id != game_state.host:
+        return _rejected(
+            ERROR_CODE.NOT_HOST, "Only the player who created the game can start it"
+        ), None
+    if game_state.status == GameStatus.STARTED:
+        return _rejected(ERROR_CODE.GAME_ALREADY_STARTED, "Game has already started"), None
+    if game_state.status == GameStatus.ENDED:
+        return _rejected(ERROR_CODE.GAME_ENDED, "Game has ended"), None
 
-    players = game_state.get("players", {})
-    if not MIN_PLAYERS <= len(players) <= MAX_PLAYERS:
-        return _rejected("PLAYER_COUNT", "Game needs 3 to 6 players"), None
+    if len(game_state.players) < MIN_PLAYERS or len(game_state.players) > MAX_PLAYERS:
+        return _rejected(ERROR_CODE.PLAYER_COUNT, "Game needs 3 to 6 players"), None
 
-    # Both starts as false
-    missing_character = False
     has_scarlet = False
 
-    # Iterate through all players and heck if each player picked a character
-    for info in players.values():
-        character_id = info.get("characterId")
-        if not character_id:
-            missing_character = True
-        # Check is Miss Scarlet is picked
-        if character_id == "Miss Scarlet":
+    for player in game_state.players.values():
+        if player.character is None:
+            return _rejected(
+                ERROR_CODE.MISSING_CHARACTER, "Every player must select a character"
+            ), None
+        if player.character.name == CharType.MISS_SCARLET:
             has_scarlet = True
 
-    if missing_character:
-        return _rejected("MISSING_CHARACTER", "Every player must select a character"), None
     if not has_scarlet:
-        return _rejected("MISS_SCARLET_REQUIRED", "Miss Scarlet must be selected"), None
+        return _rejected(ERROR_CODE.MISS_SCARLET_REQUIRED, "Miss Scarlet must be selected"), None
 
     # Set up the game
     _setup_game(game_state)
@@ -400,25 +478,80 @@ def handle_action(player_id, message):
     """
     Look up the game and player, then forward to the Rules Engine
     """
+    rules_engine = RulesEngine()
+
     msg_type = message.get("type")
     game_id, game_state = find_game_player(player_id)
 
     if game_id is None:
-        return _rejected("PLAYER_NOT_IN_GAME", "Player is not in a game"), None
+        return _rejected(ERROR_CODE.PLAYER_NOT_IN_GAME, "Player is not in a game"), None
     if game_state is None:
         if not game_id:
-            game_id = "unknown"
-        return _rejected("GAME_NOT_FOUND", f"game {game_id} not found"), None
-    if player_id not in game_state.get("players", {}):
-        return _rejected("PLAYER_NOT_IN_GAME", f"player {player_id} is not in {game_id}"), None
+            game_id = UNKNOWN_GAME_ID
+        return _rejected(ERROR_CODE.GAME_NOT_FOUND, f"game {game_id} not found"), None
+    if player_id not in game_state.players:
+        return _rejected(
+            ERROR_CODE.PLAYER_NOT_IN_GAME, f"player {player_id} is not in {game_id}"
+        ), None
 
     payload = message.get("payload")
     if not isinstance(payload, dict):
         payload = {}
 
-    player = game_state["players"][player_id]
+    player = game_state.players[player_id]
     logger.info(f"[GAME] Looked up {game_id} | {player_id} -> forward {msg_type} to Rules Engine")
-    accepted, reason = _rules_engine_stub(msg_type, game_state, player, payload)
+
+    match msg_type:
+        case RequestType.MOVE_REQ:
+            try:
+                location = generate_location(payload.get("targetLocationId"))
+                accepted, reason = rules_engine.validate_move(game_state, player, location)
+                if accepted:
+                    rules_engine.perform_move(game_state, player, location)
+            except ValueError:
+                accepted = False
+                reason = Reason.INVALID_LOCATION
+        case RequestType.SUGGEST_REQ:
+            try:
+                character = Card(CardType.CHARACTER.value, payload.get("suspect"))
+                weapon = Card(CardType.WEAPON.value, payload.get("weapon"))
+                accepted, reason = rules_engine.validate_suggest(
+                    game_state, player, character, weapon
+                )
+                if accepted:
+                    rules_engine.perform_suggest(game_state, player, character, weapon)
+            except ValueError:
+                accepted = False
+                reason = Reason.INVALID_CARD
+        case RequestType.DISPROVE_REQ:
+            try:
+                card = generate_card(payload.get("selectedCardId"))
+                accepted, reason = rules_engine.validate_disprove(game_state, player, card)
+                if accepted:
+                    rules_engine.perform_disprove(game_state, player, card)
+            except ValueError:
+                accepted = False
+                reason = Reason.INVALID_CARD
+        case RequestType.ACCUSE_REQ:
+            try:
+                weapon = Card(CardType.WEAPON.value, payload.get("weapon"))
+                room = Card(CardType.ROOM.value, payload.get("room"))
+                character = Card(CardType.CHARACTER.value, payload.get("suspect"))
+                accepted, reason = rules_engine.validate_accuse(
+                    game_state, player, weapon, room, character
+                )
+                if accepted:
+                    rules_engine.perform_accuse(game_state, player, weapon, room, character)
+            except ValueError:
+                accepted = False
+                reason = Reason.INVALID_CARD
+        case RequestType.END_TURN_REQ:
+            accepted, reason = rules_engine.validate_end_turn(game_state, player)
+            if accepted:
+                rules_engine.perform_end_turn(game_state, player)
+        case _:
+            accepted = False
+            reason = ERROR_CODE.INVALID_MESSAGE_TYPE
 
     if not accepted:
         error_msg = reason or "Action rejected by rule engine"

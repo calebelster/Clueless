@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from game.game import (
+from game.game_logic import (
     Card,
     CardType,
     CaseFile,

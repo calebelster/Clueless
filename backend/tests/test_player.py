@@ -1,6 +1,6 @@
 import pytest
 
-from game.game import Card, CardType, Character, CharType, Player, RoomType, WeaponType
+from game.game_logic import Card, CardType, Character, CharType, Player, RoomType, WeaponType
 
 
 @pytest.mark.parametrize(
