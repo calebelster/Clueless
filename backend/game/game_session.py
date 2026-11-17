@@ -237,6 +237,7 @@ def _saved(game_id, game_state, event_type, description):
         "type": "GAME_STATE_UPDATE",
         "payload": {
             "gameId": game_id,
+            "hostId": game_state.host,
             "status": game_state.status.value,
             "players": {
                 player_id: player.to_dict() for player_id, player in game_state.players.items()
